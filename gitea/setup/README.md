@@ -2,7 +2,6 @@
 
 Installing and configuring Gitea in Docker on the home lab laptop.
 
-## What
 - Gitea running as a Docker container
 - Web UI on port 3000
 - SSH (git operations) on port 2222, 22 already used by the hosts own SSH

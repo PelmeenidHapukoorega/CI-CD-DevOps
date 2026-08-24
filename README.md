@@ -24,3 +24,5 @@ Each tool gets its own folder with:
 ## Infra
 
 Self hosted pieces run on a home lab laptop (Ubuntu Server) acting as the always on/onprem node, reachable via static IP over a direct link to my workstation. Azure handles the cloud side pieces (AKS, Azure DevOps).
+
+I still have another PC laying around at home but still pondering on what to do with it and how to incorporate it to my day to day. Also as a sidenote i will mention that every single project and thing i have ran across the repos has been done with inconsistent network running at 500kbs at max, this alone takes quite a lot of discipline and patience lol

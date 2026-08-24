@@ -38,6 +38,8 @@ Mirror settings with 10 min interval:
 Commit landing:
 ![Commit landing in Gitea after pushing to GitHub](./screenshots/pullworking.PNG)
 
+Knowing the ins and outs of Gitea now, migrated all 4 of my main repos to Gitea as mirrors so now that when Github were to have an issue like they did 3 months ago where A LOOOT of code was just wiped from the database, i was safe.
+
 ## Takeaway
 
 * Refresh the page instead of going down rabbitholes instantly

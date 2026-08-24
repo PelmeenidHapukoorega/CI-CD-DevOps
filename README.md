@@ -12,7 +12,7 @@ Each tool gets its own folder with:
 
 | Tool | Status | Notes |
 |---|---|---|
-| [Gitea](./gitea) | In progress | Self-hosted git, backup + remote for everything else here |
+| [Gitea](./gitea) | Done | Self-hosted git, backup + remote for everything else here |
 | Jenkins | Planned | Self-hosted CI/CD |
 | K3s | Planned | Lightweight local Kubernetes |
 | ArgoCD | Planned | GitOps on K3s |

@@ -13,7 +13,7 @@ Each tool gets its own folder with:
 | Tool | Status | Notes |
 |---|---|---|
 | [Gitea](./gitea) | Done | Self-hosted git, backup + remote for everything else here |
-| [Jenkins](./jenkins) | On going | Self-hosted CI/CD |
+| [Jenkins](./jenkins/setup/README.md) | Planned | Self-hosted CI/CD |
 | K3s | Planned | Lightweight local Kubernetes |
 | ArgoCD | Planned | GitOps on K3s |
 | Ansible | Planned | Config management, extending existing playbook |

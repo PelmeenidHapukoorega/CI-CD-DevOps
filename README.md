@@ -2,6 +2,8 @@
 
 Learning DevOps tool by tool: Get it running, connect it to something real, break it, then add complexity. Building toward AZ-400 and a portfolio that actually demonstrates CI/CD practices.
 
+Repo also contains my self hosted homelab where i run all the tooling myself to gain better understanding about each one and move on gradually towards more complexity
+
 ## Approach
 
 Each tool gets its own folder with:

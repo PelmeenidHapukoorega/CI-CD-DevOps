@@ -185,3 +185,43 @@ Prometheus now showed up under plugins, checked grafana servers status and went 
 ![Prometheus data source configuration in Grafana](./screenshots/prometheus-conf-showing.PNG)
 
 Now i had node_exporter, prometheus and grafana all working as a pipeline before i could move on to creating dashboard to monitor my homelab.
+
+Since i already had node exporter configured i just imported Node exporter full dashboard with ID code 1860 and loaded that:
+
+![Node Exporter Full dashboard](./screenshots/node-dashboard-full.PNG)
+
+Next i wanted a dashboard for docker so i could see system status and containers, used `gcr.io/cadvisor/cadvisor` over the old `google/cadvisor` which runs as its own Docker container needing read only access to several host paths to see what i wanted to see:
+
+Ran it:
+
+```bash
+sudo docker run \
+--volume=/:/rootfs:ro \
+--volume=/var/run:/var/run:ro \
+--volume=/sys:/sys:ro \
+--volume=/var/lib/docker/:/var/lib/docker:ro \
+--volume=/dev/disk/:/dev/disk:ro \
+--publish=8082:8080 \
+--detach=true \
+--name=cadvisor \
+--restart=unless-stopped \
+gcr.io/cadvisor/cadvisor:latest
+```
+
+Verified it was exposing metrics and added it to Prometheus as a scrape job by editing Prometheus yaml and adding new job:
+
+```yaml
+- job_name: "cadvisor"
+  static_configs:
+    - targets: ["localhost:8082"]
+```
+
+saved config and ran promtool check on config then restarted prometheus.
+
+Checked prometheus targets to see if cadvisor was now added as a scrape job:
+
+![cAdvisor scrape target showing UP](./screenshots/cadvisor-scrape-showing.PNG)
+
+Went to Grafana and imported dashboard for cAdvisor which is actively maintained with ID 21743
+
+![cAdvisor dashboard working](./screenshots/cAdvisor-dashboard-working.PNG)

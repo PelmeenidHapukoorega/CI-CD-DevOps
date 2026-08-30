@@ -184,6 +184,8 @@ Prometheus now showed up under plugins, checked grafana servers status and went 
 
 ![Prometheus data source configuration in Grafana](./screenshots/prometheus-conf-showing.PNG)
 
+## Dashboard adding
+
 Now i had node_exporter, prometheus and grafana all working as a pipeline before i could move on to creating dashboard to monitor my homelab.
 
 Since i already had node exporter configured i just imported Node exporter full dashboard with ID code 1860 and loaded that:

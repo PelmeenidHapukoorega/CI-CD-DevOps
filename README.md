@@ -27,4 +27,16 @@ Each tool gets its own folder with:
 
 Self hosted pieces run on a home lab laptop (Ubuntu Server) acting as the always on/onprem node, reachable via static IP over a direct link to my workstation. Azure handles the cloud side pieces (AKS, Azure DevOps).
 
-I still have another PC laying around at home but still pondering on what to do with it and how to incorporate it to my day to day. Also as a sidenote i will mention that every single project and thing i have ran across the repos has been done with inconsistent network running at 500kbs at max, this alone takes quite a lot of discipline and patience lol
+I still have another PC laying around at home but still pondering on what to do with it and how to incorporate it to my day to day. Also as a sidenote i will mention that every single project and thing i have ran across the repos has been done with inconsistent network running at 500kbs at max, this alone takes quite a lot of discipline and patience lol.
+
+I also started running into issues while hosting different services on the server so i figured im gonna add a section to this readme with specific problems i ran into and what i did to either mitigate them or fix them completely.
+
+## Table of contents
+
+### Homelab issues
+
+1. [Jenkins left running, RAM exhaustion](#jenkins-left-running-ram-exhaustion)
+
+### Jenkins left runnig, RAM exhaustion
+
+Immediate fix: stopped unattended jenkins container. This let to idea of migrating self hosted services onto K3s for proper per workload resource limits and also getting more hands on with K3s which would then build on understanding K8s later.

@@ -39,4 +39,4 @@ I also started running into issues while hosting different services on the serve
 
 ### Jenkins left runnig, RAM exhaustion
 
-Immediate fix: stopped unattended jenkins container. This let to idea of migrating self hosted services onto K3s for proper per workload resource limits and also getting more hands on with K3s which would then build on understanding K8s later.
+Immediate fix: stopped unattended jenkins container. This led to idea of migrating self hosted services onto K3s for proper per workload resource limits and also getting more hands on with K3s which would then build on understanding K8s later.

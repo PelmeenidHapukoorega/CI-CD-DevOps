@@ -2,7 +2,7 @@
 
 So ive been messing around with my server recently quite a lot, self hosted a lot of things, set up grafana for example to be able to constantly monitor whats going on with the server. 
 
-I added Cadvisor to the server so i could display grafanas dashboards on it as well since i needed a use case for my laptops screen and swtiching tabs on the workstation just wasnt efficient enough. 
+I added cAdvisor to the server so i could display grafanas dashboards on it as well since i needed a use case for my laptops screen and swtiching tabs on the workstation just wasnt efficient enough. 
 
 Created a script for it as well so i can manually switch between dashboards as needed, at first had it auto switch each 60 seconds and when i was actually interacting with it, it would pause the switch countdown, however it got annoying so reverted back to manual switching.
 
@@ -91,3 +91,41 @@ Ran curl on port 9100/metrics to make sure it was serving metrics and checked Pr
 
 ![Prometheus node_exporter target showing UP after migration](./screenshots/node-up-prom.PNG)
 
+### Migration cAdvisor
+
+Used the same pattern as i did for node exporter with the exception of having 4 volume mounts in the manifest instead of 2 so:
+
+* `/rootfs`: filesystem, read only so it could correlate container storage
+* `/var/run`: Dockers socket/runtime state
+* `/sys`: cgroup stats
+* `/var/lib/docker`: Docker containers data
+
+`hostNetwork: true` wasnt actually needed for the manifest for cadvisor since it only needs proc and sys volume mounts to see Dockers state, so for basic CPU/Memory metrics this was fine.
+
+![cAdvisor Docker container running before migration](./screenshots/cadvisor-before.PNG)
+
+Also increased resource limits higher since cadvisor does more work than node exporter.
+
+Stopped docker, applied the manifests and checked pods:
+
+![cAdvisor pod stuck in RunContainerError due to service account mount conflict](./screenshots/cadvisor-pod-erroring.PNG)
+
+Checked logs on the pod which turned empty, then ran describe on cadvisor pod which showed:
+
+```
+ error mounting "/var/lib/kubelet/pods/64bd3590-848c-4d06-8fbd-838c38bd0b59/volumes/kubernetes.io~projected/kube-api-access-kpb9l" to rootfs at "/var/run/secrets/kubernetes.io/serviceaccount": create mountpoint for /var/run/secrets/kubernetes.io/serviceaccount mount: make mountpoint "/var/run/secrets/kubernetes.io/serviceaccount": mkdirat /run/k3s/containerd/io.containerd.runtime.v2.task/k8s.io/cadvisor/rootfs/run/secrets: read-only file system
+```
+
+Basically K8s tried to mount small API access token into every pod at `/var/run/secrets/kubernetes.io/serviceaccount` and i was trying to seperately mount the entire host to `/var/run` directory into the same containers `/var/run` and because my mount was read only and covered the same path, it coultn create its token mounpoint there therefore collision and crash.
+
+The fix was to tell the pod to not bother injecting the token at all, so edited the yml and added `automountServiceAccountToken: false` under specs.
+
+Saved the manifest and got pods again:
+
+![cAdvisor pod running successfully after disabling automountServiceAccountToken](./screenshots/cadvisor-pod-running.PNG)
+
+And verified it was up in prometheus as well.
+
+cAdvisor was migrated too now.
+
+### Migration

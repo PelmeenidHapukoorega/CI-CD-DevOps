@@ -128,4 +128,117 @@ And verified it was up in prometheus as well.
 
 cAdvisor was migrated too now.
 
-### Migration
+### Migration Pihole
+
+
+Used the same pattern here again with the exception being creating secret for pihole-exporter and secret being the app password because without it Piholes API couldnt fetch the metrics, same logic when i first self hosted it with docker.
+
+```bash
+kubectl create secret generic pihole-exporter-secret \
+--from-literal=app-password='PASSWORD_HERE'
+```
+
+Then checked if it was created:
+
+![Kubernetes Secret created for pihole-exporter app password](./screenshots/app-pw-secret.PNG)
+
+Created the yaml and defined app password as env variable (`PIHOLE_APP_PASSWORD`) sourced from the secret so the actual value wouldnt appear in the file itself.
+
+Referenced it inside `args` list using `$(VARIABLE_NAME)` since pihole-exporter supports standard `-k` flag and no env variable but 
+
+Kubernetes bridges that by substituting env vars value into `args` at container startup.
+
+Next stopped docker for pihole-exporter, applied the manifest and looked at pods:
+
+![pihole-exporter pod running after fixing the credential typo](./screenshots/pihole-pod-running.PNG)
+
+Checked if it was pulling metrics:
+
+```bash
+curl http://localhost:9617/metrics | grep pihole_query_count
+```
+
+![pihole-exporter metrics flowing correctly on port 9617](./screenshots/pihole-metrics-flow.PNG)
+
+### Migration Gitea
+
+With gitea the migration would need to be different since it already holds meaningful data from all 4 of my repos and is synced.
+
+Backed up Giteas current data first before handling the migration. 
+
+Checked where dockers volume was currently storing the data with:
+
+```bash
+sudo docker inspect gitea | grep -A 5 "Mounts"
+```
+
+Confirmed it was living `gitea-data` docker volume and was physically stored at `/var/lib/docker/volumes/gitea-data/_data`.
+
+Backed it up:
+
+```bash
+sudo tar -czvf ~/gitea-backup-$(date +%Y%m%d).tar.gz -C /var/lib/docker/volumes/gitea-data/_data .
+```
+
+Then verified the backup actually had content:
+
+```bash
+ls -lh ~/gitea-backup-*.tar.gz
+```
+
+![Gitea backup created before migration](./screenshots/gitea-backed-up.PNG)
+
+Moved onto setting up persistent storage properly for the K3s version.
+
+Created clean and dedicated location for Giteas K3s data which would be seperate from Dockers old volume:
+
+```bash
+sudo mkdir -p /mnt/k3s-data/gitea
+```
+
+Then changed ownership k3s-data to make UID 1000 owner of every file in the directory so giteas containerized process could read and write its own data once it was mounted.
+
+```bash
+sudo chown -R 1000:1000 /mnt/k3s-data/gitea
+```
+
+Restored backup into the new location:
+
+```bash
+sudo tar -xzvf ~/gitea-backup-$(date +%Y%m%d).tar.gz -C /mnt/k3s-data/gitea
+```
+
+And created the manifest where i defined persistent volume or PV and persistent volume claim aka PVC.
+
+So PV the real 5Gb of disk space at `/mnt/k3s-data/gitea` and PVC the request actual request a pod for that storage.
+
+Kubernetes keeps these seperate on purpose and i needed both because pods only ever reference a PVC and not PV directly, seperating "what storage exists" from "what an app asks for" so the same manifest would work no matter how the storage would be provisioned underneath.
+
+PVC got stuck on `Pending` because K3s auto assigned its default `local-path` StorageClass to any PVC that doesnt explicitly opt out which didnt match the PVs own and unset storage class.
+
+![PVC stuck in Pending due to StorageClass mismatch](./screenshots/PVC-pending.PNG)
+
+Fixed it by adding `storageClassName: ""` under PVC spec line in the yml.
+
+Hit second error by trying to fix the first one and realised that once PVC is created its immutable and therefore cant be edited.
+
+Deleted the old and recreated the PVC rather than patch it.
+
+Checked if both PV and PVC showed `Bound` now:
+
+![PV and PVC bound after fixing the StorageClass mismatch](./screenshots/PV-PVC-bound.PNG)
+
+Then created the deployment manifest for gitea.
+
+Added `kind: Deployment`, `replicas: 1` since i only needed just 1 instance of Gitea, no use running multiple copies writing the same data.
+
+Then `volumeMounts`/`volumes` referencing the PVC which would connect the pod to persistent storage. 
+
+Also added `type: NodePort` to make it reachable on a fixed port on the servers real IP, similar to `hostNetwork` but recommended way for non DaemonSet workloads.
+
+Applied the manifest then checked pods:
+
+![Gitea pod running with all four migrated workloads](./screenshots/gitea-pod-running.PNG)
+
+Then checked gitea itself and verified my data was intact and migration was success and stopped giteas docker container.
+

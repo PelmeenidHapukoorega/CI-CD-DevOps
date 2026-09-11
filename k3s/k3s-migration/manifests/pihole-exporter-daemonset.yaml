@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: pihole-exporter
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: pihole-exporter
+  template:
+    metadata:
+      labels:
+        app: pihole-exporter
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: pihole-exporter
+          image: ghcr.io/mosher-labs/pihole6-exporter:latest
+          args:
+            - "-H"
+            - "Server-IP"
+            - "--pihole-port"
+            - "8080"
+            - "--protocol"
+            - "http"
+            - "-k"
+            - "$(PIHOLE_APP_PASSWORD)"
+          env:
+            - name: PIHOLE_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pihole-exporter-secret
+                  key: app-password
+          ports:
+            - containerPort: 9617
+              hostPort: 9617
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "150m"
+              memory: "128Mi"

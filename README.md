@@ -15,9 +15,9 @@ Each tool gets its own folder with:
 | Tool | Status | Notes |
 |---|---|---|
 | [Gitea](./gitea) | Done | Self-hosted git, backup + remote for everything else here |
-| [Jenkins](./jenkins/setup/README.md) | Planned | Self-hosted CI/CD |
+| [Jenkins](./jenkins/setup/) | Planned | Self-hosted CI/CD |
 | [K3s](./k3s/setup) | Done | Lightweight local Kubernetes |
-| ArgoCD | Planned | GitOps on K3s |
+| [ArgoCD](./argocd/setup/) | Planned | GitOps on K3s |
 | Ansible | Planned | Config management, extending existing playbook |
 | [Grafana/Prometheus](./prometheus-grafana/setup) | Done | Observability stack — node_exporter + cAdvisor scraped by Prometheus, visualized in Grafana |
 | AI agent layer | Planned | Automation/incident-response experiments |
@@ -31,12 +31,13 @@ I still have another PC laying around at home but still pondering on what to do 
 
 I also started running into issues while hosting different services on the server so i figured im gonna add a section to this readme with specific problems i ran into and what i did to either mitigate them or fix them completely.
 
-## Table of contents
-
-### Homelab issues
+## Homelabing and issues encountered
 
 1. [Jenkins left running, RAM exhaustion](#jenkins-left-running-ram-exhaustion)
 
-### Jenkins left runnig, RAM exhaustion
+--- 
 
+### Jenkins left running, RAM exhaustion
 Immediate fix: stopped unattended jenkins container. This led to idea of migrating self hosted services onto K3s for proper per workload resource limits and also getting more hands on with K3s which would then build on understanding K8s later.
+
+→ [K3s migration](./k3s/k3s-migration/README.md)

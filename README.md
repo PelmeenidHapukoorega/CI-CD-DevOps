@@ -15,9 +15,9 @@ Each tool gets its own folder with:
 | Tool | Status | Notes |
 |---|---|---|
 | [Gitea](./gitea) | Done | Self-hosted git, backup + remote for everything else here |
-| [Jenkins](./jenkins/setup/) | Planned | Self-hosted CI/CD |
+| [Jenkins](./jenkins/setup/) | Done | Self-hosted CI/CD |
 | [K3s](./k3s/setup) | Done | Lightweight local Kubernetes |
-| [ArgoCD](./argocd/setup/) | Planned | GitOps on K3s |
+| [ArgoCD](./argocd/setup/) | Done | GitOps on K3s |
 | Ansible | Planned | Config management, extending existing playbook |
 | [Grafana/Prometheus](./prometheus-grafana/setup) | Done | Observability stack — node_exporter + cAdvisor scraped by Prometheus, visualized in Grafana |
 | AI agent layer | Planned | Automation/incident-response experiments |

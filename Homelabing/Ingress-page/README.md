@@ -161,3 +161,21 @@ Browsed and chose Trusted Root Certification Authorities as the store, then fini
 Closed all tabs since it needs a clean restart of it, then checked `https://argocd.hermitden`:
 
 ![argocd.hermitden fully trusted with a clean HTTPS padlock](./screenshots/CA-fully-trusted.PNG)
+
+Next i repeated doing ingress for Gitea, Grafana and Prometheus, starting off with Gitea first.
+
+Used the same shape as ArgoCD for ingress with difference being in port.
+
+Applied the manifest, then got cert with:
+
+```bash
+kubectl get certificate -n default
+```
+
+///gitea cert///
+
+Afterwards added DNS entry to Pihole: `gitea.hermitden` and servers IP.
+
+Checked `https://gitea.hermitden`
+
+///gitea direct///

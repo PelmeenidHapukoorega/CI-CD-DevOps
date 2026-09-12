@@ -172,10 +172,10 @@ Applied the manifest, then got cert with:
 kubectl get certificate -n default
 ```
 
-///gitea cert///
+![gitea.hermitden certificate showing Ready True](./screenshots/gitea-cert.PNG)
 
 Afterwards added DNS entry to Pihole: `gitea.hermitden` and servers IP.
 
 Checked `https://gitea.hermitden`
 
-///gitea direct///
+![Gitea reachable directly via gitea.hermitden with a trusted HTTPS padlock](./screenshots/gitea-direct.PNG)

@@ -14,7 +14,7 @@ Full pieces and how they connect:
 
 5. ArgoCD: Instead of manually running `kubectl apply` every time i would add or change 1 of these ingress manifests id push yml to Github and ArgoCD would automatically detect change and apply it to the cluster for me. Essentially more practice for GitOps. 
 
-Considered poinging ArgoCD at gitea instead since its self hosted but it only pulls mirrors from GitHub on an interval so it would add real delay between pushing and seeing it deployed. GitHub would stay the source of truth ArgoCD would watch directly and Gitea remains just a backup mirror.
+Considered pointing ArgoCD at gitea instead since its self hosted but it only pulls mirrors from GitHub on an interval so it would add real delay between pushing and seeing it deployed. GitHub would stay the source of truth ArgoCD would watch directly and Gitea remains just a backup mirror.
 
 ### Setting up ArgoCD
 

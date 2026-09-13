@@ -59,7 +59,7 @@ Then checked if ingress was now working:
 
 ![ArgoCD accessible over plain HTTP via argocd.hermitden before TLS](./screenshots/argocd-direct.PNG)
 
-### Cert-manager installation and setup
+### Cert-manager and Ingress setup
 
 My core problem was that HTTPS requires a certificate and certs only mean something if some trusted authority vouches for them and since i have no public domain then i became the AUTHORITY. 
 

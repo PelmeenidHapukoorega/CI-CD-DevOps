@@ -179,3 +179,19 @@ Afterwards added DNS entry to Pihole: `gitea.hermitden` and servers IP.
 Checked `https://gitea.hermitden`
 
 ![Gitea reachable directly via gitea.hermitden with a trusted HTTPS padlock](./screenshots/gitea-direct.PNG)
+
+Dealt with migrating Prometheus and Grafana to k3s as well which i have not documented under k3s migration since its more of the same pattern i already used with others there.
+
+With that out of the way created ingress for both using the same pattern as i have with others above and are visible in the repo anyway.
+
+Applied both:
+
+![Prometheus and Grafana certificates issued alongside giteas existing one](./screenshots/grafana-prom-ingress.PNG)
+
+Then DNS entries for both via Pi hole and checked URLs:
+
+![prometheus.hermitden and grafana.hermitden both working directly with clean HTTPS](./screenshots/grafana-prom-direct.PNG)
+
+This closes out the ingress part of this small project, next up making the landing page and have them all in 1 place.
+
+

@@ -22,7 +22,7 @@ Now that i had set up ArgoCD i could start with the ingress page idea itself.
 
 For ArgoCD setup see: ***[ArgoCD setup](../../argocd/setup/README.md)***
 
-### Setting up ingress
+### Cert-manager and Ingress setup
 
 Currently ArgoCD was accessible for me through port forwarding (explained in the setup) but now i wanted to set up ingress for it specifically so i wouldnt need to access anything over localhost or port forwarding.
 
@@ -58,8 +58,6 @@ Added DNS entry in Pi-holes admin UI by going to Local DNS > DNS records and add
 Then checked if ingress was now working:
 
 ![ArgoCD accessible over plain HTTP via argocd.hermitden before TLS](./screenshots/argocd-direct.PNG)
-
-### Cert-manager and Ingress setup
 
 My core problem was that HTTPS requires a certificate and certs only mean something if some trusted authority vouches for them and since i have no public domain then i became the AUTHORITY. 
 
@@ -194,4 +192,24 @@ Then DNS entries for both via Pi hole and checked URLs:
 
 This closes out the ingress part of this small project, next up making the landing page and have them all in 1 place.
 
+### Pivoting initial idea
 
+My initial idea was to have a landing page where i could access all my services from 1 place but i also wanted to have a public portfolio landing page.
+
+So instead of having both in 1 place i opted out to have them seperate instead since i have services that have no business in being publicly available. So public portfolio landing page and Homarr as the internal launcher.
+
+Then i wanted the internal launcher to be available for me remotely in case i wasnt at home so i could still have access and make sure everything was working when i was running things.
+
+So now the idea transpired into following:
+
+1. Personal internal launcher using Homarr: Single page with tiles for services so i wouldnt need to manage them individually, purely for my use case.
+
+2. Public portfolio landing page: Custom built, real domain/HTTPS, showing either github activity, curated safe stats from the homelab and links to write ups or smt like that, full list still pending.
+
+Connective infrastructure for making both possible:
+
+* Tailscale: Installed on the phone/server, full remote access to everything at `.hermitden`, no public exposure.
+
+* Cloudflare tunnel: Solves getting the public landing page onto the internet despite my horrible connection, tunnel makes outbound only connection from the server to Cloudflare which would then serve my domain publicly with TLS, no inbound ports opened on the home network.
+
+* Real domain: Full ownership and control.

@@ -213,3 +213,47 @@ Connective infrastructure for making both possible:
 * Cloudflare tunnel: Solves getting the public landing page onto the internet despite my horrible connection, tunnel makes outbound only connection from the server to Cloudflare which would then serve my domain publicly with TLS, no inbound ports opened on the home network.
 
 * Real domain: Full ownership and control.
+
+### Tailscale for remote access
+
+Singed up for Tailscale and installed it on the server:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+Then ran `sudo tailscale up` for authentication.
+
+Enabled IP forwarding to advertise home subnet so Tailscale could route every device on the network not just the server.
+
+IPv4:
+
+```bash
+echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+```
+
+IPv6:
+
+```bash
+echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+```
+
+Then told the kernel to load the settings:
+
+```bash
+sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
+```
+
+And advertised the home network range so Tailscale would know what to route:
+
+```bash
+sudo tailscale up --advertise-routes=192.168.137.0/24
+```
+
+Checked tailscales admin page to make sure my server existed in the list, then edited route settings to approve my set IP address range for the devices.
+
+Downloaded the app itself and had issues with initial login, the buttons just werent working, looked for a workaround which was to use Auth key for login, generated new key through tailscales console and used that to login the app.
+
+Then checked if i could access `grafana.hermitden` remotely without being on the same network:
+
+<img src="./screenshots/hermitden-phone.PNG" width="300">

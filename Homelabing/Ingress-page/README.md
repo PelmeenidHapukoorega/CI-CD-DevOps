@@ -257,3 +257,20 @@ Downloaded the app itself and had issues with initial login, the buttons just we
 Then checked if i could access `grafana.hermitden` remotely without being on the same network:
 
 <img src="./screenshots/hermitden-phone.PNG" width="300">
+
+Moved onto homarr, first generated encryption key for it:
+
+```bash
+openssl rand -hex 32
+```
+And then added it as kubernetes secret:
+
+```bash
+kubectl create secret generic homarr-secret --from-literal=encryption-key='My generated key'
+```
+
+Didnt want any complexity and since Homarr defaults to running as root inside its container i just used its default.
+
+Created config for Homarr and added 500Mi as modest storage room for it now.
+
+Checked bound status between volumes before moving on to creating deployment manifest, applied it and checked if the pod was up.

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homarr
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homarr
+  template:
+    metadata:
+      labels:
+        app: homarr
+    spec:
+      containers:
+        - name: homarr
+          image: ghcr.io/homarr-labs/homarr:latest
+          ports:
+            - containerPort: 7575
+          env:
+            - name: SECRET_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homarr-secret
+                  key: encryption-key
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "200Mi"
+            limits:
+              cpu: "300m"
+              memory: "400Mi"
+          volumeMounts:
+            - name: homarr-data
+              mountPath: /appdata
+      volumes:
+        - name: homarr-data
+          persistentVolumeClaim:
+            claimName: homarr-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homarr-service
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: homarr
+  ports:
+    - port: 7575
+      targetPort: 7575

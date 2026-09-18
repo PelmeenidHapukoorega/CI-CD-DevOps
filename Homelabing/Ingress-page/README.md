@@ -274,3 +274,17 @@ Didnt want any complexity and since Homarr defaults to running as root inside it
 Created config for Homarr and added 500Mi as modest storage room for it now.
 
 Checked bound status between volumes before moving on to creating deployment manifest, applied it and checked if the pod was up.
+
+Then added ingress manifest, applied it checked certificate:
+
+![Homarr certificate issued alongside the other hermitden TLS secrets](./screenshots/homarr-certificate.PNG)
+
+Then added DNS entry on Pihole and checked if it was resolving:
+
+![Homarr init setup wizard resolving at home.hermitden](./screenshots/homarr-resolving.PNG)
+
+Set up my account and then made connections to my services:
+
+![Homarr dashboard with tiles for all hermitden services, weather, and clock](./screenshots/homarr-dashboard.PNG)
+
+Now i had my own homepage done so i wouldnt need to have seperate tabs open for each but could access them all in 1 place.

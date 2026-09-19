@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>I sell frogs for a living</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #17111F;
+  }
+
+  .campfire-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .campfire-glow {
+    position: absolute;
+    inset: -60px;
+    background: radial-gradient(circle, rgba(232, 138, 58, 0.22), transparent 70%);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.06); }
+  }
+
+  .campfire-gif {
+    position: relative;
+    width: 160px;
+    image-rendering: pixelated;
+  }
+</style>
+</head>
+<body>
+
+<div class="campfire-wrap">
+  <div class="campfire-glow"></div>
+  <img src="campfire.gif" alt="" class="campfire-gif">
+</div>
+
+</body>
+</html>

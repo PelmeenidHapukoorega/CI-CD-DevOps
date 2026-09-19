@@ -288,3 +288,119 @@ Set up my account and then made connections to my services:
 ![Homarr dashboard with tiles for all hermitden services, weather, and clock](./screenshots/homarr-dashboard.PNG)
 
 Now i had my own homepage done so i wouldnt need to have seperate tabs open for each but could access them all in 1 place.
+
+
+### Setting up Domain and tunnel
+
+Bought myself `hermitden.dev` domain, then connected it to cloudflare to set up the tunnel since my home network is behind CGNAT. So with the tunnel instead of waiting for inbound traffic to reach me, my server would reach to Cloudflare and keep the connection open. 
+
+Set up zero trust tunnel, named it and then installed cloudflare using instructions provided by cloudflare onto my server:
+
+Added cloudflares gpg key:
+
+```bash
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+```
+
+```bash
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+```
+
+Then added repo to app repositiories:
+
+```bash
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+```
+
+And installed cloudflare:
+
+```bash
+sudo apt-get update && sudo apt-get install cloudflared
+```
+
+Then installed the service:
+
+```bash
+sudo cloudflared service install 'CLOUDFLARE_TOKEN'
+```
+
+Checked cloudflare to see if the connection was made:
+
+![Cloudflare tunnel to server working](./screenshots/cloudflare-tunnel.PNG)
+
+### Designing and building landing page
+
+Honestly when i got to this point i was stumped, then had a think about the design on how to make it appealing to myself. 
+
+Made a rough shape of it and added few assets i found at `itch.io` so no copyright bs coming my way.
+
+More to the point about the page itself, i didnt want just a page where im just showcasing what ive made, i wanted it to serve a better principal.
+
+My intention with the site is to use it as a live portfolio piece, and since im right about finished with having all the necessary tools for DevOps installed and self hosted i figured the way im gonna do this is to run everything through the CI-CD pipeline for it, track changes, have version control and gradually see the site get better and better. 
+
+My rough idea is some cozy dark fantasy pixelated art since im a sucker for dark fantasy RPGs but thinking on maybe adding a character to the page and as the page itself gets new features, stats, updates and whatever, then the character itself would level up as well. Still pondering on how that will look like.
+
+### Setting up the pipeline
+
+Now since the idea was to run everything as a pipeline for the changes to the site i set up docker for it. Set up nginx for the site since container would only serve files for it.
+
+```dockerfile
+FROM nginx:alpine
+COPY . /usr/share/nginx/html
+EXPOSE 80
+```
+
+Next question i needed to figure out was how would the new image tag actually reach ArgoCD?
+
+Decided to have Jenkins buld the image, then have it tag git commit SHA and push it to Giteas registry and then edit the K3s deployment manifest and then commit changes back to the repo.
+
+Since my source of truth was github but jenkins lives internally for me then this meant that Githubs webhook would need it to be able to reach jenkins.
+
+I could have jenkins check Github for new commits on schedule ie every 2-3 mins, 0 exposure but slight delay.
+
+Or i could expose webhook endpoint through cloudflare tunnel.
+
+Was leaning towards webhook endpoint via tunnel but started thinking on security since it also added public attack surface on the infra itself.
+
+To mitigate it i added a firewall scoped to 1 hostname and block everything except those CIDR ranges so even if someone finds the URL, the request would never reach Jenkins at all.
+
+Scope to specific webhook path through the tunnel so the public route has 1 job and nothing else is reachable through it.
+
+Use HMAC secret so anything that wouldnt match the signature would get booted.
+
+### Firewall rule for webhook
+
+Set up firewall rule on cloudflare to block out everything except for requests that are either both on the same webhook path and coming from Github IP.
+
+On cloudflare: Security > Create rule > custom rules.
+
+Edited the expression and added my IP strings by using the output i got for running:
+
+```bash
+curl -s https://api.github.com/meta | python -c "import json,sys; print(json.load(sys.stdin)['hooks'])"
+```
+
+Then created the rule and verified it was active:
+
+![Cloudflare firewall rule](./screenshots/cloudflare-rule.PNG)
+
+
+Added route to the webhooks subdomain on cloudflare: Zero trust > tunnels and mesh > my tunnel > Published application routes.
+
+Added details and saved the route.
+
+### HMAC secret, authentication
+
+Generated random secret on the server:
+
+```bash
+openssl rand -hex 32
+```
+
+And added it to jenkins, then added the same value Githubs webhook config as secret.
+
+Then got Giteas registry credentials, generated token scoped for package with read and write, then added token to jenkins as credentials.
+
+Repeated the same thing for githubs write access creds.
+
+### 

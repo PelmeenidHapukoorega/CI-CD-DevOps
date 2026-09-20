@@ -15,6 +15,9 @@ spec:
     volumeMounts:
     - name: registry-creds
       mountPath: /kaniko/.docker
+    - name: hermitden.ca
+      mountPath: /kaniko/ssl/certs/hermitden-ca.crt
+      subPath: ca.crt
   volumes:
   - name: registry-creds
     secret:
@@ -22,6 +25,9 @@ spec:
       items:
       - key: .dockerconfigjson
         path: config.json
+  - name: hermitden-ca
+    configMap:
+        name: hermitden-ca
 """
     }
   }
@@ -49,6 +55,7 @@ spec:
             /kaniko/executor \
               --context=`pwd`/Homelabing/Ingress-page/Page-assets \
               --dockerfile=dockerfile \
+              --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
               --destination=${IMAGE}:${GIT_COMMIT.take(7)}
           """
         }

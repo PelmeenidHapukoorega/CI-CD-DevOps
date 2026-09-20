@@ -468,7 +468,7 @@ Created jenkins-rbac.yaml alonside the existing jenkins-deployment.yaml and jenk
 
 Applied it:
 
-///rbac-manifest-applied///
+![Jenkins RBAC manifest](./screenshots/jenkins-rbac.PNG)
 
 Then patched Jenkins deployment to use new serviceaccount instead of default one, so added `servicAccountName: jenkins` to the deployment.yaml on the server, applied the manifest and ran the pipeline again.
 
@@ -491,3 +491,45 @@ Ran the pipeline again and met with `Error: error resolving dockerfile path: ple
 Checked the kaniko command `--dockerfile` still had the full repo path even though `--context` already pointed at `Page-assets/`, kaniko resolves `--dockerfile` relative to `--context` so the path doubled up and didnt exist. 
 
 Fixed by changing `--dockerfile` to just `Dockerfile`.
+
+Ran the pipeline again and same error persisted, turned out the file was actually committed as lowercase `dockerfile`, Linux treats that as a different file from `Dockerfile`. 
+
+Fixed the Jenkins file to match the real filename.
+
+Next run got past that and failed on the push itself, CoreDNS couldnt resolve `gitea.hermitden`. 
+
+Host resolved it fine (via Tailscales split DNS to Pihole) but CoreDNS just does a dumb forward to `/etc/resolv.conf` with none of that routing logic. 
+
+Since this would break any pod reaching `.hermitden` i fixed it properly by adding a `coredns-custom` ConfigMap forwarding `.hermitden` queries straight to Pihole. 
+
+Restarted CoreDNS:
+
+```bash
+kubectl rollout restart deployment coredns -n kube-system
+```
+
+Then checked if it was now resolving to my servers IP with:
+
+```bash
+kubectl run dns-test --image=busybox:1.36 --rm -it --restart=Never -- nslookup gitea.hermitden
+```
+
+CoreDNS fix worked, ran pipeline again.
+
+Error `tls: failed to verify certificate: x509: certificate signed by unknown authority`.
+
+So now Kaniko wasnt trusting my internal CA which i created for HTTPS encryption.
+
+Decided to give Kaniko the CA as a file which it then could use to verify the connection.
+
+Pulled the CA cert out of the secret first:
+
+```bash
+kubectl get secret hermitden-ca-secret -n cert-manager -o jsonpath='{.data.ca\.crt}' | base64 -d > hermitden-ca.crt
+```
+
+Then verified its output:
+
+```bash
+cat hermitden-ca.crt
+```

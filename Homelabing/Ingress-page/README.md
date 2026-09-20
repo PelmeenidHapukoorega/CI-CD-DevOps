@@ -441,3 +441,47 @@ Actual work runs in 4 steps:
 3. Update manifest: Edits `site-deployment.yaml` file inside the pod, swapping image line to point at the new tag that got pushed.
 
 4. Commit manifest change: takes the edited file and pushes it back to Github as an actual commit using write access token which is what ArgoCD notices and syncs to the cluster.
+
+### Jenkins pipeline job
+
+Created the job on jenkins and ran it and got met with:
+
+```
+WorkflowScript: 3: Invalid agent type "kubernetes" specified. Must be one of [any, label, none] @ line 3, column 5.
+```
+
+It didnt recognize the word kubernetes, installed Kubernetes agent plugin to mitigate it.
+
+Ran the job again and this time got: No kubernetes cloud was found.
+
+Jenkins got the syntax but had no connection configurted to actually talk to Kubernetes API and spun up a pod. Managed jenkins > clouds > new cloud > Kubernetes, left URL blank since jenkins already runs inside the cluster and could auto detect the in cluster API endpoint, set namespace to default and saved.
+
+Ran the job again and got a new error: pods is forbidden. User "system:serviceaccount:default:default" cannot list resource pods in API group in the namespace"default"
+
+Turns out jenkins runs under the clusters default service acc which had no permissions at all by default, couldnt even list pods let alone create new ones for the pipeline to use.
+
+Needed to set up RBAC properly, dedicated service account for Jenkins, Role that grants it permissions it needs (create/list/watch/delete pods, pods/exec, pods/log, events), and RoleBinding tying the 2 together.
+
+Kept it scoped to just the default namespace instead of cluster wide, same least privilege pattern as everything else.
+
+Created jenkins-rbac.yaml alonside the existing jenkins-deployment.yaml and jenkins-storage.yaml manifests on the server.
+
+Applied it:
+
+///rbac-manifest-applied///
+
+Then patched Jenkins deployment to use new serviceaccount instead of default one, so added `servicAccountName: jenkins` to the deployment.yaml on the server, applied the manifest and ran the pipeline again.
+
+Hit `Pod [Pending][ContainersNotReady] containers with unready status: [kaniko jnlp]` this time around.
+
+Checked `kubectl get pods` while debugging and noticed `cloudflared` was in CrashLoopBackOff with 850 plus restarts over 45 hours, completely separate issue from the pipeline itself but worth fixing since it affects the whole tunnel and webhook setup.
+
+Described the pod and found the actual cause was that the liveness probe checked "https://:200-/ready" but cloudflares metrics and readiness server was actually starting on port 20241, nothing was listening on 2000 at all so kubelet kept killing the container every -10 seconds.
+
+Fixed it by adding `--metrics 0.0.0.0:200` to cloudflareds container args to it would bind where the probe expected it. Restart count stopped climbing.
+
+Back to pipeline, ran the job again and this time pod itself came up fine but jenkins still failed the build with `java.lang.IllegalStateException: Agent is not connected after 1000 seconds`.
+
+Described the pod and saw the jnlp container was configured with `JENKINS_URL: https://jenkins.hermitden/` meaning the agent was trying to link home through public ingress hostname going through Traefik, TLS and internal CA even tho its running in the same cluster 1 hop away from Jenkins.
+
+Fixed it by setting jenkins tunnel under the kubernetes clouds settings to `jenkins-service.default.svc.cluster.local:50000` so agent pods connect directly to jenkins over the internal cluster network via jnlp port instead of going out through the ingress/DNS/TLS path.

@@ -543,3 +543,23 @@ kubectl create configmap hermitden-ca --from-file=ca.crt=hermitden-ca.crt -n def
 And updated Jenkinsfile, added volumenMount and volume for the CA, then added `--registry-certificate` pointing at the mounted file.
 
 Saved, commit push and ran pipeline again.
+
+Errored out again since it could find the dockerfile, realised i hadnt commited and pushed it to github so it couldnt find it.
+
+Ran the pipeline again and this time kaniko build + push and manifest edit all succeeded. 
+
+Also got a warning that said `A secret was passed to "sh" using Groovy String interpolation, which is insecure.`.
+
+Right now jenkins did `git push https://${GIT_USER}:${GIT_PASS}@github.com/...` inside """ string which meant Groovy substitude the actual token into the script text itself before jenkins credential masking could hide it.
+
+Used ''' single quoted on the block and referenced the credentials as shell variables instead.
+
+Then got 403 permission denied pushing as my own Github user.
+
+Checked personal tokens on Github to make sure my write-creds which i made much earlier werent expired and were scoped properly.
+
+It wasnt, edited the token, set CI-CD-DevOps repo as the only repo, checked permissions and checkboxed contents and set the permissions to read and write.
+
+Ran the pipeline again and this time it succeeded:
+
+///pipeline-working-ss///

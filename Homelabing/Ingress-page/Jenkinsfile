@@ -70,18 +70,16 @@ spec:
       }
     }
 
-    stage('Commit manifest change') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-          sh """
-            git config user.email "jenkins@hermitden.dev"
-            git config user.name "jenkins"
-            git add ${MANIFEST_PATH}
-            git commit -m "deploy: hermitden-site ${GIT_COMMIT.take(7)}"
-            git push https://${GIT_USER}:${GIT_PASS}@github.com/PelmeenidHapukoorega/CI-CD-DevOps.git HEAD:main
-          """
-        }
-      }
+stage('Commit manifest change') {
+  steps {
+    withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+      sh '''
+        git config user.email "jenkins@hermitden.dev"
+        git config user.name "jenkins"
+        git add ''' + MANIFEST_PATH + '''
+        git commit -m "deploy: hermitden-site ''' + GIT_COMMIT.take(7) + '''"
+        git push https://$GIT_USER:$GIT_PASS@github.com/PelmeenidHapukoorega/CI-CD-DevOps.git HEAD:main
+      '''
     }
   }
 }

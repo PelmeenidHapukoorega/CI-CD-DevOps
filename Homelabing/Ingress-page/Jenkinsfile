@@ -65,7 +65,7 @@ spec:
     stage('Update manifest') {
       steps {
         sh """
-          sed -i 's|image: .*|image: ${IMAGE}:${GIT_COMMIT.take(7)}|' ${MANIFEST_PATH}
+          sed -i -E 's|^([[:space:]]*)image: .*|\\1image: ${IMAGE}:${GIT_COMMIT.take(7)}|' ${MANIFEST_PATH}
         """
       }
     }

@@ -8,22 +8,22 @@ spec:
   selector:
     matchLabels:
       app: hermitden-site
-    template:
-      metadata:
-        labels:
-          app: hermitden-site
-      spec:
-        imagePullSecrets:
-          - name: gitea-registry-secret
-        containers:
-          - name: hermitden-site
-            image: gitea.hermitden/virtualhermit/hermitden-site:c902a95
-            ports:
-              - containerPort: 80
-            resources:
-              requests:
-                cpu: 25m
-                memory: 32Mi
-              limits:
-                cpu: 100m
-                memory: 128Mi
+  template:
+    metadata:
+      labels:
+        app: hermitden-site
+    spec:
+      imagePullSecrets:
+        - name: gitea-registry-secret
+      containers:
+        - name: hermitden-site
+          image: gitea.hermitden/virtualhermit/hermitden-site:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

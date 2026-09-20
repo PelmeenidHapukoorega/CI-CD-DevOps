@@ -48,7 +48,7 @@ spec:
           sh """
             /kaniko/executor \
               --context=`pwd`/Homelabing/Ingress-page/Page-assets \
-              --dockerfile=Homelabing/Ingress-page/Page-assets/Dockerfile \
+              --dockerfile=Dockerfile \
               --destination=${IMAGE}:${GIT_COMMIT.take(7)}
           """
         }

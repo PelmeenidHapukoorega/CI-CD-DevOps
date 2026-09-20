@@ -533,3 +533,13 @@ Then verified its output:
 ```bash
 cat hermitden-ca.crt
 ```
+
+Then created the config map for it:
+
+```bash
+kubectl create configmap hermitden-ca --from-file=ca.crt=hermitden-ca.crt -n default
+```
+
+And updated Jenkinsfile, added volumenMount and volume for the CA, then added `--registry-certificate` pointing at the mounted file.
+
+Saved, commit push and ran pipeline again.

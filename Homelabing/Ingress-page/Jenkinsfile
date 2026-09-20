@@ -15,7 +15,7 @@ spec:
     volumeMounts:
     - name: registry-creds
       mountPath: /kaniko/.docker
-    - name: hermitden.ca
+    - name: hermitden-ca
       mountPath: /kaniko/ssl/certs/hermitden-ca.crt
       subPath: ca.crt
   volumes:

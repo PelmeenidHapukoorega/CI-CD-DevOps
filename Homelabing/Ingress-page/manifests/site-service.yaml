@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermitden-site-service
+  namespace: default
+spec:
+  selector:
+    app: hermitden-site
+  ports:
+    - port: 80
+      targetPort: 80

@@ -403,4 +403,41 @@ Then got Giteas registry credentials, generated token scoped for package with re
 
 Repeated the same thing for githubs write access creds.
 
-### 
+### Kaniko registry auth
+
+Wanted to try Kaniko to build images instead of docker here for least privileged access. 
+
+It runs inside a cluster, doesnt require any special privileges like with docker where daemon runs on the host and then builds the image.
+
+More secure for K8s environments and would be fun to try out and see it firsthand.
+
+Created a kubernetes secret first to give Kaniko config file to authenticate with to Gitea since it has no Docker daemon therefore it cant use `docker login`.
+
+```bash
+kubectl create secret docker-registry gitea-registry-secret \
+--docker-server=gitea.hermitden \
+--docker-username=virtualhermit \
+--docker-password=GITEA-TOKEN-I-GENERATED \
+--docker-email=MY-EMAIL \
+-n default
+```
+
+Created deployment manifest next, telling K3s to run the pod with `hermitden-site` container image on port 80 i.e to run the site itself.
+
+And `site-service` manifest to give the pod stable internal network address so other things inside the cluster (like Cloudflare tunnel) could reach it without caring which pod is currently running or whats the IP on it.
+
+Then created ArgoCD application that would tell ArgoCD to actually watch the `manifest/` folder and have it poll the repo to see manifests changes and then sync it to clusters. 
+
+Added jenkinsfile where it spins up temporary container (Kaniko in this case) sitting idle with Giteas credentials already mounted as a file.
+
+Added `triggers` block where the pipeline would be triggerd only when Github sends a signed push notif through the webhook.
+
+Actual work runs in 4 steps:
+
+1. Checkout: Pulls altes code from Github into the pod so there is actually something to build.
+
+2. Kaniko reads dockerfile, buyilds the nginx and site image and pushes it straight to Giteas registry tagged with short git commit hash so every new build i make for the webiste gets a unique and traceble tag instead of overwriting latest.
+
+3. Update manifest: Edits `site-deployment.yaml` file inside the pod, swapping image line to point at the new tag that got pushed.
+
+4. Commit manifest change: takes the edited file and pushes it back to Github as an actual commit using write access token which is what ArgoCD notices and syncs to the cluster.

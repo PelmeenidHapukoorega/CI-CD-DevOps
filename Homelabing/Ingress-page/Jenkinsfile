@@ -1,0 +1,80 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - sleep
+    args:
+    - 9999999
+    volumeMounts:
+    - name: registry-creds
+      mountPath: /kaniko/.docker
+  volumes:
+  - name: registry-creds
+    secret:
+      secretName: gitea-registry-secret
+      items:
+      - key: .dockerconfigjson
+        path: config.json
+"""
+    }
+  }
+
+  triggers {
+    githubPush()
+  }
+
+  environment {
+    IMAGE = "gitea.hermitden/virtualhermit/hermitden-site"
+    MANIFEST_PATH = "Homelabing/Ingress-page/manifests/site-deployment.yaml"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build and push image') {
+      steps {
+        container('kaniko') {
+          sh """
+            /kaniko/executor \
+              --context=`pwd`/Homelabing/Ingress-page/Page-assets \
+              --dockerfile=Homelabing/Ingress-page/Page-assets/Dockerfile \
+              --destination=${IMAGE}:${GIT_COMMIT.take(7)}
+          """
+        }
+      }
+    }
+
+    stage('Update manifest') {
+      steps {
+        sh """
+          sed -i 's|image: .*|image: ${IMAGE}:${GIT_COMMIT.take(7)}|' ${MANIFEST_PATH}
+        """
+      }
+    }
+
+    stage('Commit manifest change') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+          sh """
+            git config user.email "jenkins@hermitden.dev"
+            git config user.name "jenkins"
+            git add ${MANIFEST_PATH}
+            git commit -m "deploy: hermitden-site ${GIT_COMMIT.take(7)}"
+            git push https://${GIT_USER}:${GIT_PASS}@github.com/PelmeenidHapukoorega/CI-CD-DevOps.git HEAD:main
+          """
+        }
+      }
+    }
+  }
+}

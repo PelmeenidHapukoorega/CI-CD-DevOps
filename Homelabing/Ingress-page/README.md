@@ -485,3 +485,9 @@ Back to pipeline, ran the job again and this time pod itself came up fine but je
 Described the pod and saw the jnlp container was configured with `JENKINS_URL: https://jenkins.hermitden/` meaning the agent was trying to link home through public ingress hostname going through Traefik, TLS and internal CA even tho its running in the same cluster 1 hop away from Jenkins.
 
 Fixed it by setting jenkins tunnel under the kubernetes clouds settings to `jenkins-service.default.svc.cluster.local:50000` so agent pods connect directly to jenkins over the internal cluster network via jnlp port instead of going out through the ingress/DNS/TLS path.
+
+Ran the pipeline again and met with `Error: error resolving dockerfile path: please provide a valid path to a Dockerfile within the build context with --dockerfile`.
+
+Checked the kaniko command `--dockerfile` still had the full repo path even though `--context` already pointed at `Page-assets/`, kaniko resolves `--dockerfile` relative to `--context` so the path doubled up and didnt exist. 
+
+Fixed by changing `--dockerfile` to just `Dockerfile`.

@@ -17,7 +17,7 @@ spec:
           - name: gitea-registry-secret
         containers:
           - name: hermitden-site
-            image: gitea.hermitden/virtualhermit/hermitden-site:136187b
+            image: gitea.hermitden/virtualhermit/hermitden-site:e3f9d7c
             ports:
               - containerPort: 80
             resources:

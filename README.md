@@ -31,6 +31,37 @@ I still have another PC laying around at home but still pondering on what to do 
 
 I also started running into issues while hosting different services on the server so i figured im gonna add a section to this readme with specific problems i ran into and what i did to either mitigate them or fix them completely.
 
+### Infra update 21.09.26
+
+Ever since the writing above the single Docker host has grown into K3s cluster running most of my self hosted stack:
+
+* Jenkins
+* ArgoCD
+* Gitea (git + container registry)
+* Prometheus/Grafana for monitoring
+* Pi-Hole as local DNS
+* Homarr as internal launcher tying it all together.
+
+Everything sits behind ingress (Traefik) with self hosted CA through cert-manager so every internal service gets real HTTPS instead of browser warnings.
+
+Remote access is handled through Tailscale with split DNS so i could reach anything at `.hermitden` from my phone or laptop without exposing single port publicly.
+
+Only thing being public is the portfolio landing page (constantly in development), exposed through cloudflare tunnel since my home connection sits behind CGNAT, with the whole thing wired into CI-CD pipeline (Jenkins + Kaniko + ArgoCD) so pushing to the repo is what actually ships changes to the live site which is what this project eventually evolved into:
+
+The entire purpose is to have a live environment where i could push changes into and genuinely practice CI/CD devops as close to the production environment i could think of getting without having a job yet. 
+
+My intention is figure out stuff as i go and how i could turn this in time into smt more interesting. 
+
+Current idea is to have it as a portfolio site with everything in 1 place to make it easier for recruiters but i dont want it to be just that, i want it to be a visible live portfolio piece.
+
+### Infra update
+
+Since writing the above, the single Docker host has grown into an actual K3s cluster running most of my self hosted stack: Jenkins, ArgoCD, Gitea (git + container registry), Prometheus/Grafana for monitoring, Pi-hole for local DNS, and Homarr as an internal launcher tying it all together. Everything sits behind proper ingress (Traefik) with a self hosted CA through cert-manager so every internal service gets real HTTPS instead of browser warnings.
+
+Remote access is handled through Tailscale with split DNS so i can reach anything at `.hermitden` from my phone or laptop without exposing a single port publicly. The one thing that is public is my portfolio landing page, exposed through a Cloudflare Tunnel since my home connection sits behind CGNAT, with the whole thing wired into a real CI/CD pipeline (Jenkins + Kaniko + ArgoCD) so pushing to the repo is what actually ships changes to the live site.
+
+Full writeup on all of that: → [Ingress + landing page](./Homelabing/Ingress-page/README.md)
+
 ## Homelabing and issues encountered
 
 1. [Jenkins left running, RAM exhaustion](#jenkins-left-running-ram-exhaustion)

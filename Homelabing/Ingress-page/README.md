@@ -1,3 +1,20 @@
+## Table of Contents <a id="toc"></a>
+
+- [Ingress + landing page](#ingress--landing-page)
+  - [Build log](#build-log)
+    - [Cert-manager and Ingress setup](#cert-manager-and-ingress-setup)
+    - [Pivoting initial idea](#pivoting-initial-idea)
+    - [Tailscale for remote access](#tailscale-for-remote-access)
+    - [Setting up Domain and tunnel](#setting-up-domain-and-tunnel)
+    - [Designing and building landing page](#designing-and-building-landing-page)
+    - [Setting up the pipeline](#setting-up-the-pipeline)
+    - [Firewall rule for webhook](#firewall-rule-for-webhook)
+    - [HMAC secret, authentication](#hmac-secret-authentication)
+    - [Kaniko registry auth](#kaniko-registry-auth)
+    - [Jenkins pipeline job](#jenkins-pipeline-job)
+    - [ArgoCD prune incident](#argocd-prune-incident)
+    - [Continuing the pipeline](#continuing-the-pipeline)
+
 # Ingress + landing page
 
 Had an idea about creating a landing page for myself finally, clean HTTPS urls for the homelab instead of port remembering but instead of doing it in a simple manner like just installing Caddy my idea was to do it the way real Kubernetes clusters actually solve the problem using ingress, cert manager and ArgoCD for GitOps on top.
@@ -16,11 +33,15 @@ Full pieces and how they connect:
 
 Considered pointing ArgoCD at gitea instead since its self hosted but it only pulls mirrors from GitHub on an interval so it would add real delay between pushing and seeing it deployed. GitHub would stay the source of truth ArgoCD would watch directly and Gitea remains just a backup mirror.
 
+[back to top](#toc)
+
 ## Build log
 
 Now that i had set up ArgoCD i could start with the ingress page idea itself.
 
 For ArgoCD setup see: ***[ArgoCD setup](../../argocd/setup/README.md)***
+
+[back to top](#toc)
 
 ### Cert-manager and Ingress setup
 
@@ -192,6 +213,8 @@ Then DNS entries for both via Pi hole and checked URLs:
 
 This closes out the ingress part of this small project, next up making the landing page and have them all in 1 place.
 
+[back to top](#toc)
+
 ### Pivoting initial idea
 
 My initial idea was to have a landing page where i could access all my services from 1 place but i also wanted to have a public portfolio landing page.
@@ -213,6 +236,8 @@ Connective infrastructure for making both possible:
 * Cloudflare tunnel: Solves getting the public landing page onto the internet despite my horrible connection, tunnel makes outbound only connection from the server to Cloudflare which would then serve my domain publicly with TLS, no inbound ports opened on the home network.
 
 * Real domain: Full ownership and control.
+
+[back to top](#toc)
 
 ### Tailscale for remote access
 
@@ -289,6 +314,7 @@ Set up my account and then made connections to my services:
 
 Now i had my own homepage done so i wouldnt need to have seperate tabs open for each but could access them all in 1 place.
 
+[back to top](#toc)
 
 ### Setting up Domain and tunnel
 
@@ -328,6 +354,8 @@ Checked cloudflare to see if the connection was made:
 
 ![Cloudflare tunnel to server working](./screenshots/cloudflare-tunnel.PNG)
 
+[back to top](#toc)
+
 ### Designing and building landing page
 
 Honestly when i got to this point i was stumped, then had a think about the design on how to make it appealing to myself. 
@@ -339,6 +367,8 @@ More to the point about the page itself, i didnt want just a page where im just 
 My intention with the site is to use it as a live portfolio piece, and since im right about finished with having all the necessary tools for DevOps installed and self hosted i figured the way im gonna do this is to run everything through the CI-CD pipeline for it, track changes, have version control and gradually see the site get better and better. 
 
 My rough idea is some cozy dark fantasy pixelated art since im a sucker for dark fantasy RPGs but thinking on maybe adding a character to the page and as the page itself gets new features, stats, updates and whatever, then the character itself would level up as well. Still pondering on how that will look like.
+
+[back to top](#toc)
 
 ### Setting up the pipeline
 
@@ -368,6 +398,8 @@ Scope to specific webhook path through the tunnel so the public route has 1 job 
 
 Use HMAC secret so anything that wouldnt match the signature would get booted.
 
+[back to top](#toc)
+
 ### Firewall rule for webhook
 
 Set up firewall rule on cloudflare to block out everything except for requests that are either both on the same webhook path and coming from Github IP.
@@ -389,6 +421,8 @@ Added route to the webhooks subdomain on cloudflare: Zero trust > tunnels and me
 
 Added details and saved the route.
 
+[back to top](#toc)
+
 ### HMAC secret, authentication
 
 Generated random secret on the server:
@@ -402,6 +436,8 @@ And added it to jenkins, then added the same value Githubs webhook config as sec
 Then got Giteas registry credentials, generated token scoped for package with read and write, then added token to jenkins as credentials.
 
 Repeated the same thing for githubs write access creds.
+
+[back to top](#toc)
 
 ### Kaniko registry auth
 
@@ -441,6 +477,8 @@ Actual work runs in 4 steps:
 3. Update manifest: Edits `site-deployment.yaml` file inside the pod, swapping image line to point at the new tag that got pushed.
 
 4. Commit manifest change: takes the edited file and pushes it back to Github as an actual commit using write access token which is what ArgoCD notices and syncs to the cluster.
+
+[back to top](#toc)
 
 ### Jenkins pipeline job
 
@@ -564,6 +602,8 @@ Ran the pipeline again and this time it succeeded:
 
 ![Pipeline succeeding](./screenshots/pipeline-working.PNG)
 
+[back to top](#toc)
+
 ### ArgoCD prune incident 
 
 After the pipeline finally succeeded i checked on argocd to confirm if the deploy landed. Found out instead the app was stuck on retry, OutOfSync throwing errors on deployment manifest.
@@ -588,7 +628,9 @@ Recreated all the deleted manifests from the reference-manifests copies in git a
 kubectl patch application <NAME> -n argocd --type merge -p '{"operation":null}'`
 ```
 
-### Continuing pipeline
+[back to top](#toc)
+
+### Continuing the pipeline
 
 Site pod got stuck in ImagePullBackOff.
 
@@ -614,7 +656,6 @@ kubectl patch application hermitden-site -n argocd --type merge -p '{"metadata":
 
 Synced the correct tag in. Deployment came up healthy.
 
-
 Last i wanted to expose the site itself, landing page itself didnt have its own published route yet since pipeline was the priority first. 
 
 Added new route `www.hermitden.dev`, service type http since cloudflare terminates TLS at the their edge and internal service has none of its own, same pattern as other internal stuff.
@@ -628,3 +669,5 @@ Forced curl to resolve manually, got a clean 200 back. Opened it from the actual
 Tailscales cache cleared on its own after a while.
 
 Pipeline is now fully closed, push to page assets goes all the way through the live site with nothing manual in between.
+
+[back to top](#toc)

@@ -34,6 +34,7 @@ I also started running into issues while hosting different services on the serve
 ## Homelabing and issues encountered
 
 1. [Jenkins left running, RAM exhaustion](#jenkins-left-running-ram-exhaustion)
+2. [ArgoCD Pruned live infra during manifest cleanup](#argocd-pruned-live-infra-during-manifest-cleanup)
 
 --- 
 
@@ -41,3 +42,12 @@ I also started running into issues while hosting different services on the serve
 Immediate fix: stopped unattended jenkins container. This led to idea of migrating self hosted services onto K3s for proper per workload resource limits and also getting more hands on with K3s which would then build on understanding K8s later.
 
 → [K3s migration](./k3s/k3s-migration/README.md)
+
+### ArgoCD pruned live infra during manifest cleanup
+Immediate fix: disabled ArgoCDs syncPolicy before moving unrelated manifests out of the watched path. Didnt help, sync was already mid-retry from before the policy got disabled.
+
+That in-flight sync finished with prune still active and wiped 3 ingresses, CA cert and all of Homarr.
+
+Recovered fully, reapplied everything from moved manifests copies in git.
+
+→ [ArgoCD prune incident](./Homelabing/Ingress-page/README.md#argocd-prune-incident)

@@ -562,4 +562,69 @@ It wasnt, edited the token, set CI-CD-DevOps repo as the only repo, checked perm
 
 Ran the pipeline again and this time it succeeded:
 
-///pipeline-working-ss///
+![Pipeline succeeding](./screenshots/pipeline-working.PNG)
+
+### ArgoCD prune incident 
+
+After the pipeline finally succeeded i checked on argocd to confirm if the deploy landed. Found out instead the app was stuck on retry, OutOfSync throwing errors on deployment manifest.
+
+Found 2 things after digging. First was the deployment yaml was corrupted by sed bug in the jenkinsfile and argocd app watched folder had been silently tracking unrelated infra manifests id left in there as reference copies (so Homarr, some ingresses, CA issuer) with `prune: true` on.
+
+To be safe i disabled syncPolicy before moving the reference files out, thinking it would stop anything from being touched.
+
+Well...it didnt.
+
+Automated syn was already mid retry loop before i disabled the policy and apparently disabling it only blocks new syncs and not the ones already running.
+
+Once i pushed the deployment fix, in-flight sync succeeded with `prune: true` still baked into it and deleted everything no longer present in git: 3 ingresses, CA cert object and Homarss entire deployment/Service/PVC/PV.
+
+Recovery worked because deleting k3s object doesnt delete whats behind it, homarrs data was untouched on disk and the CA actual secret/key survived solo of the Cert object.
+
+Recreated all the deleted manifests from the reference-manifests copies in git and everything reconnected fine.
+
+**Lesson:** disabling argocds sync policy stops future syncs and not in flight ones. Kill switch mid incident is clearing active operation cleanly with:
+
+```bash
+kubectl patch application <NAME> -n argocd --type merge -p '{"operation":null}'`
+```
+
+### Continuing pipeline
+
+Site pod got stuck in ImagePullBackOff.
+
+First error was cert unknown authority again but this time from the node cause kubelet/containerd pulling the image never got the CA trust that i gave Kaniko earlier.
+
+Fixed by dropping CA cert onto the node and pointing k3s at it via /etc/rancher/k3s/registries.yaml, restarted k3s so containerd actually picked it up
+
+That being sorted the error changed to routing bug, curl to gitea.hermitden was getting traefiks own default self signed cert instead of the actual one.
+
+This was the fallout from the argocd incident, gitea ingress itself got pruned along with everything else so traefik had nothing to route the hostname to.
+
+After reapply it went bacj to trust error yet agan. Then once cleared it hit `:latest not found` since kaniko only ever pushes commit sha tags and manifest i manually fixed earlier just had `:latest` as placeholder.
+
+Fixed it by rerunning the pipeline itself instead of patching around it. 
+
+First run of that failed on groovy syntax error, jenkinsfile was missing its last 2 closing braces. Fixed that, pushed again and pipeline succeeded clean.
+
+Argo failed to pick up the new commit instantly since it polls every few mins. Forced a hard refresh on the application:
+
+```bash
+kubectl patch application hermitden-site -n argocd --type merge -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}'
+```
+
+Synced the correct tag in. Deployment came up healthy.
+
+
+Last i wanted to expose the site itself, landing page itself didnt have its own published route yet since pipeline was the priority first. 
+
+Added new route `www.hermitden.dev`, service type http since cloudflare terminates TLS at the their edge and internal service has none of its own, same pattern as other internal stuff.
+
+DNS record showed up fine on puhblic resolvers but the servers own resolver (tailscale) kept giving NXDOMAIN off a cahced negative lookup from before the record existed.
+
+Forced curl to resolve manually, got a clean 200 back. Opened it from the actual browser after and site loaded fine:
+
+![Site finally working](./screenshots/site-working.PNG)
+
+Tailscales cache cleared on its own after a while.
+
+Pipeline is now fully closed, push to page assets goes all the way through the live site with nothing manual in between.

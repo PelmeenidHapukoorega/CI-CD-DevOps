@@ -43,3 +43,17 @@ Applied the RBAC manifest, then checked if service account was created using the
 ```bash
 kubectl get serviceaccount deploy-history-reader -n argocd
 ```
+
+Then checked rolebinding for ArgoCD:
+
+```bash
+kubectl get role,rolebinding -n argocd | grep deploy-history
+```
+
+///rolebindings screenshot///
+
+Moved the rbac.yaml from the manifests folder to a different folder for seperation since ArgoCD watches the manifests folder itself for creation, pruning and updating and having permissions there just screamed trouble for me.
+
+RBAC is identity and permissions so i kept it manual for oversight, same thing i learned earlier with the argocd prune incident from the ingress build. 
+
+Then created ArgoCDs application file to watch cronjob.yaml file and create the object in the cluster to match it and for automation.

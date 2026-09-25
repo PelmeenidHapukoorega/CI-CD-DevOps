@@ -61,3 +61,89 @@ Then created ArgoCDs application file to watch cronjob.yaml file and created the
 Applied the application manifest and checked if application was synced and healthy:
 
 ///deploy-synced-healthy////
+
+Pushed a test change on jenkins, application didnt however trigger the jenkins build so started investigatinga as to why it wasnt triggering.
+
+Checked jenkings job config to see if githubs hook trigger for GITscm polling was checked, it was.
+
+Checked webhook delivery on github side, payload was correct, ref refs/heads/main, correct repo, 200 response.
+
+Checked included/excluded path restrictions, everything was correct.
+
+Cleared path restrictions entirely as a test, still no agent was starting a build on push, ruled out path restriction as the cause.
+
+Found that build #88 had run and finished, so concurrency wasnt blocking anything. Added debug log recorder in manage jenkins > system log, logging `org.jenkinsci.plugins.github` at FINE, showed webhook recieved "Considering to poke hermitden-site", "Poked hermitden-site" then nothing.
+
+Checked the jobs config.xml on disk, found the trigger was persisted under plugin="github@1.47.0" so much older version than currently installed github plugin, stale serialization maybe?
+
+Soft restarted jenking to force plugins reloading cleanly, no change.
+
+Added 2nd logger specifically for `com.cloudbees.jenkins.GitHubPushTrigger at FINE, completely silent across multiple pushed, no output at all past "poked".
+
+Unchecked github hook trigger, saved, rechecked, saved again to force clean re serialization on the trigger object under current plugin version, no change yet again.
+
+Checked project url field, correctly filled and pointed at `CI-CD-DevOps` repo.
+
+Checked jenkins thread dump for stuck/blocked scm polling thread. Found 1 idle SCMEvent thread, healthy not stuck.
+
+Checked if `{githubPush()}` was declared in jenkinsfile, already there.
+
+Used jenkins script console to call `trigger.run()` on the jobs GitHubPushTrigger object, bypassing webhook. Job queue stayed empty, confirmed bug is inside the triggers own polling logic and not webhook delivery.
+
+Used the console again to check `SCMTriggerItem.poll()` directly with capture listener, found the root cause: `Error: no such computer hermitden-site-87-...poll()`, it was trying to reuse a long dead ephemeral kubernetes agent pod from build #87 as its comparision baseline.
+
+Removed redundant explicity checkout scm stage from jenkinsfile (declarative: Checkout SCM running automatically already), running theory is that it was poisoning the polling baseline, didnt fix it but removed it as dead weight regardless.
+
+Searched job directly `/mnt/k3s-data/jenkins/jobns/hermitden-site` for anything that was referencing the "dead computer", found github polling log and live polling state file, confirmed this is what the webhook pokes were writing into.
+
+Found a bug in fetch.sh along the way, wrong app name, three missing `$` on var references, fixced that.
+
+Seperately found a bug in argocd application, yaml had been sitting inside the same manifests folder it was configured to watch, causing argocd to misdetect and silentll skip deploying cronjob.yaml even while reporting Synced/Healthy. Moved the app yaml out the module root, fixed.
+
+Application object briefly disappeared entirely after the move, reapplied app yaml manually, confirmed synced/healthy and cronjob intact afterwards.
+
+Fixed dockerfile filename case mismatch in jenkinsfile kaniko stage. Flag said `--dockerfile=Dockerfile`, actual file was lowercase, this caused build failures.
+
+Trigger clean manual build after all fixes and the pipeline succeeded end to end, deploy-history-fetch:latest image built and pushed successfully.
+
+Re ran script console poll test after the successful build. Confirmed the pattern: Error now referenced `hermiden-site-91-...` so just finished build, proving that this wasnt a 1 time scale cache from days ago, `poll()` tries to reuse whatever pod ran the most recent build, every time and that pod is alwasy already dead by the time polling runs next since K8s agents are ephemeral and torn down withing mins of finishing.
+
+Root cause conclusion: Mismatch between classic SCMTrigger/poll() which assumes reusable persistent workspace and kubernetes-plugin ephemeral agents.
+
+Potential fix i will need to test: Convert the website to multibranch pipeline job which uses github-branch-sources event based indexing instead of the broken poll() path entirely.
+
+Fallback confirmed not viable at all, poll scm would hit the exact same poll() method so it wouldnt have worked either. For now manual Build now going forward until i set up the multibranch.
+
+Picked this up again today, saw that traefik logs showed 404 on /v2/virtualhermit/deploy-history-fetch/manifests/latest, cronjob pods stuck in ImagePullBackOff.
+
+Checked registry directly with curl against giteas v2 API, anon request gave unauthorized (expected, not useful)
+
+Checked if giteas registry secret existed in the argocd namespace at all. It didnt, only existed in default.
+
+Realized cronjobs pod spec never had imagePullSecrets at all to begin with, wasnt referencing credentials so pulls were anonymoys regardless of namespace.
+
+Copied the secret into argocd namespace manually, added imagePullSecrets:-name:gitea-registry-secret to cronjobs yaml. Commited, pushed, argocd auto synced it, confirmed live in the deployed cronjob spec.
+
+Retested with manual job, error changed to ErrImagePull with message "not found", image didnt exist in the registry.
+
+Used curl to auth against gitea registrys api, NAME_UNKNOWN, image was never pushed despite last nights kaniko log appearing to show successful push.
+
+Made trivial commit to fetch.sh to retrigger the changeset gated jenkins stage, ran build manually, confirmed this time it pushed. Verified directly agains the registrys API afterward.
+
+Ran manual test job, pod completed successfully, configmap now shows real data:
+
+```json
+='{.data.data\.json}'
+{
+  "sync_status": "Synced",
+  "health_status": "Healthy",
+  "last_deployed": "2026-09-25T02:37:37Z",
+  "deploy_count": 10,
+  "data_generated_at": "2026-09-25T11:35:08Z"
+```
+
+Module confirmed working end to end, rbac, configmap, fetch.sh, dockerfile, cronjob, argocd application, image build/push, pull secret, actual fetch logicl all working together.
+
+Cron will now run on its own every hour.
+
+Still open: Webhook auto-trigger issue from last night unresolved, ill try setting up multibranch pipeline to see if that would fix the issue.

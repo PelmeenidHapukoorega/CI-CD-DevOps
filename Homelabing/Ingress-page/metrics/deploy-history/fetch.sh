@@ -23,3 +23,4 @@ OUTPUT=$(jq -n \
 kubectl create configmap deploy-history -n "$NAMESPACE_SITE" \
   --from-literal=data.json="$OUTPUT" \
   --dry-run=client -o yaml | kubectl apply -f -
+# rebuild trigger

@@ -56,4 +56,8 @@ Moved the rbac.yaml from the manifests folder to a different folder for seperati
 
 RBAC is identity and permissions so i kept it manual for oversight, same thing i learned earlier with the argocd prune incident from the ingress build. 
 
-Then created ArgoCDs application file to watch cronjob.yaml file and create the object in the cluster to match it and for automation.
+Then created ArgoCDs application file to watch cronjob.yaml file and created the object in the cluster to match it and for automation.
+
+Applied the application manifest and checked if application was synced and healthy:
+
+///deploy-synced-healthy////

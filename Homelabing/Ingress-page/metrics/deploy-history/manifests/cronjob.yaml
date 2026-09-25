@@ -11,6 +11,8 @@ spec:
         spec:
           serviceAccountName: deploy-history-reader
           restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: gitea-registry-secret
           containers:
             - name: fetch
               image: gitea.hermitden/virtualhermit/deploy-history-fetch:latest

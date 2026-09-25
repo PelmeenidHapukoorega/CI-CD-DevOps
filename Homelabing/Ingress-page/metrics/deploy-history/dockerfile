@@ -1,0 +1,11 @@
+FROM alpine:3.20
+
+RUN apk add --no-cache curl jq bash \
+    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x kubectl \
+    && mv kubectl /usr/local/bin/kubectl
+
+COPY fetch.sh /scripts/fetch.sh
+RUN chmod +x /scripts/fetch.sh
+
+ENTRYPOINT [ "/scripts/fetch.sh" ]

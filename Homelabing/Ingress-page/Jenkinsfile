@@ -61,6 +61,25 @@ spec:
         }
       }
     }
+    stage('Build and push deploy-history-fetch image') {
+      when {
+        anyOf {
+          changeset "Homelabing/Ingress-page/metrics/deploy-history/dockerfile"
+          changeset "Homelabing/Ingress-page/metrics/deploy-history/fetch.sh"
+        }
+      }
+      steps {
+        container('kaniko') {
+          sh """
+            /kaniko/executor \
+              --context='pwd'/Homelabing/Ingress-page/metrics/deploy-history \
+              --dockerfile=Dockerfile \
+              --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
+              --destination=gitea.hermitden.virtualhermit.deploy-history-fetch:${GIT_COMMIT.take(7)}
+              """
+        }
+      }
+    }
 
     stage('Update manifest') {
       steps {

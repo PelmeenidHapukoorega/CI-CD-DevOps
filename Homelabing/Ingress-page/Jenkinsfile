@@ -67,7 +67,7 @@ spec:
           sh """
             /kaniko/executor \
               --context=`pwd`/Homelabing/Ingress-page/metrics/deploy-history \
-              --dockerfile=Dockerfile \
+              --dockerfile=dockerfile \
               --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
               --destination=gitea.hermitden/virtualhermit/deploy-history-fetch:latest
               """

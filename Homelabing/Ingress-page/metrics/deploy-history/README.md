@@ -50,7 +50,7 @@ Then checked rolebinding for ArgoCD:
 kubectl get role,rolebinding -n argocd | grep deploy-history
 ```
 
-///rolebindings screenshot///
+![Rolebindings binded](./screenshots/rolebindings-binded.PNG)
 
 Moved the rbac.yaml from the manifests folder to a different folder for seperation since ArgoCD watches the manifests folder itself for creation, pruning and updating and having permissions there just screamed trouble for me.
 
@@ -60,7 +60,7 @@ Then created ArgoCDs application file to watch cronjob.yaml file and created the
 
 Applied the application manifest and checked if application was synced and healthy:
 
-///deploy-synced-healthy////
+![Deploy synced fully](./screenshots/deploy-synced-healthy.PNG)
 
 Pushed a test change on jenkins, application didnt however trigger the jenkins build so started investigatinga as to why it wasnt triggering.
 

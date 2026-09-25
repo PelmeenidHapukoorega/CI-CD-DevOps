@@ -42,12 +42,6 @@ spec:
   }
 
   stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-
     stage('Build and push image') {
       steps {
         container('kaniko') {

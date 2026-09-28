@@ -2,51 +2,73 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>I sell frogs for a living</title>
-<style>
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #17111F;
-  }
-
-  .campfire-wrap {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .campfire-glow {
-    position: absolute;
-    inset: -60px;
-    background: radial-gradient(circle, rgba(232, 138, 58, 0.22), transparent 70%);
-    animation: pulse 2.4s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 0.7; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.06); }
-  }
-
-  .campfire-gif {
-    position: relative;
-    width: 160px;
-    image-rendering: pixelated;
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hermitden.dev</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="campfire-wrap">
-  <div class="campfire-glow"></div>
-  <img src="campfire.gif" alt="" class="campfire-gif">
-</div>
+<section class="hero">
+  <div class="campfire-wrap">
+    <div class="campfire-glow"></div>
+    <img src="campfire.gif" alt="" class="campfire-gif">
+  </div>
+  <div class="hero-inner">
+    <div class="hero-kicker">HOMELAB / PORTFOLIO</div>
+    <h1 class="hero-name">virtualHermit</h1>
+    <p class="hero-role">Self-taught cloud engineer building real infrastructure — Azure, Kubernetes, and a homelab running on a 5G antenna.</p>
+    <div class="hero-certs">
+      <span class="cert-chip">AZ-900</span>
+      <span class="cert-chip">AZ-104</span>
+      <span class="cert-chip">SC-200</span>
+    </div>
+    <div class="hero-links">
+      <a href="https://github.com/PelmeenidHapukoorega" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</section>
 
+<main>
+  <section class="section">
+    <h2 class="section-title">Live Stats</h2>
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <div class="stat-label">Deploy Status</div>
+        <div class="stat-value" id="stat-status">loading...</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Services</div>
+        <div class="stat-value" id="stat-services">—</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Uptime</div>
+        <div class="stat-value" id="stat-uptime">—</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Blocked</div>
+        <div class="stat-value" id="stat-blocked">—</div>
+      </div>
+    </div>
+    <p class="stats-note">Pulled live from the cluster.</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Build Log</h2>
+    <div class="timeline" id="timeline-list"></div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Recent Activity</h2>
+    <div class="activity-list" id="activity-list">
+      <div class="loading-text">Loading...</div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  hermitden.dev &middot; built and broken in public
+</footer>
+
+<script src="script.js"></script>
 </body>
 </html>

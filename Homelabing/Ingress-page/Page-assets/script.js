@@ -171,34 +171,34 @@
   // latest activity: GitHub API fetch 
   var latestEl = document.getElementById('latest-commit');
 
-  function fetchLatestActivity() {
-    fetch('https://api.github.com/users/' + GITHUB_USERNAME + '/events/public?per_page=8')
-      .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
-      .then(function (events) {
-        var pushEvents = events.filter(function (e) { return e.type === 'PushEvent'; }).slice(0, 6);
-        if (pushEvents.length === 0) {
-          latestEl.textContent = 'no recent public activity';
-          FILES['/activity.txt'] = 'no recent public activity';
-          return;
-        }
-        var first = pushEvents[0];
-        var firstMsg = first.payload.commits && first.payload.commits[0] ? first.payload.commits[0].message.split('\n')[0] : 'commit';
-        latestEl.textContent = firstMsg;
+function fetchLatestActivity() {
+  fetch('https://api.github.com/users/' + GITHUB_USERNAME + '/events/public?per_page=8')
+    .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+    .then(function (events) {
+      var pushEvents = events.filter(function (e) {
+        return e.type === 'PushEvent' && e.payload.commits && e.payload.commits.length > 0;
+      }).slice(0, 6);
+      if (pushEvents.length === 0) {
+        latestEl.textContent = 'no recent public activity';
+        FILES['/activity.txt'] = 'no recent public activity';
+        return;
+      }
+      var first = pushEvents[0];
+      var firstMsg = first.payload.commits[0].message.split('\n')[0];
+      latestEl.textContent = firstMsg;
 
-        var lines = pushEvents.map(function (e) {
-          var repo = e.repo.name.split('/')[1] || e.repo.name;
-          var commit = e.payload.commits && e.payload.commits[0];
-          var msg = commit ? commit.message.split('\n')[0] : 'commit';
-          return repo + '   ' + msg;
-        });
-        FILES['/activity.txt'] = lines.join('\n');
-      })
-      .catch(function () {
-        latestEl.textContent = 'couldn\'t load activity';
-        FILES['/activity.txt'] = 'couldn\'t reach the GitHub API just now.';
+      var lines = pushEvents.map(function (e) {
+        var repo = e.repo.name.split('/')[1] || e.repo.name;
+        var msg = e.payload.commits[0].message.split('\n')[0];
+        return repo + '   ' + msg;
       });
-  }
-
+      FILES['/activity.txt'] = lines.join('\n');
+    })
+    .catch(function () {
+      latestEl.textContent = 'couldn\'t load activity';
+      FILES['/activity.txt'] = 'couldn\'t reach the GitHub API just now.';
+    });
+}
   // boot sequence: show identity immediately so the page isnt an empty prompt
   execute('whoami');
   print('Self taught Engineer, Tallinn, Estonia. Type <span class="clickable" role="button" tabindex="0" onclick="runCmd(\'help\')">help</span> to look around.');

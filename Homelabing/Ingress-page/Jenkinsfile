@@ -115,5 +115,21 @@ spec:
         }
       }
     }
+    stage('Purge Cloudflare cache') {
+      when {
+        changeset "Homelabing/Ingress-page/Page-assets/**"
+      }
+      environment {
+        CF_TOKEN = credentials('cf-api-token')
+      }
+      steps {
+        sh '''
+          curl -s -X POST "https://api.cloudflare.com/client/v4/zones/8b670d16fa65f2f753d34118cf1fcc87/purge_cache" \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"files":["https://hermitden.dev/style.css","https://hermitden.dev/script.js"]}'
+        '''
+      }
+    }
   }
 }

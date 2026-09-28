@@ -147,3 +147,29 @@ Module confirmed working end to end, rbac, configmap, fetch.sh, dockerfile, cron
 Cron will now run on its own every hour.
 
 Still open: Webhook auto-trigger issue from last night unresolved, ill try setting up multibranch pipeline to see if that would fix the issue.
+
+Set up new multibranch pipeline job on jenkins and ran the build.
+
+Jenkins couldnt post build status back to github commits `github-write-creds` PAT was missing scope.
+
+Generate new fine grained PAT scoped to `CI-CD-DevOps` repo only with contents set to read and write and commit statuses read and write as well, updated the credentials on jenkins with it.
+
+Jenkins was launching agents after the first push, the issue was that the pipelines own deploy step commits updated manifest back to `main` which re triggered the githubs webhook, self triggering loop by design of the workflow. The existing "skip if bot coimmit" stage was supposed to catch this but ran after the Kubernetes pod was already provisioned so every bot commit still wasted full pod spin up.
+
+Tried to fix with `agent none` + `when(beforeAgent: true) { changelog ...}` to check commit messages before requesting a pod avoiding the plugin route since "Basic branch build strategies" wasnt available.
+
+Found that multibranch job had its github branch source webhook handling and a `triggers { githubPush() }` block in the jenkinsfile. So 2 independent trigger mechanisms reacting to the same webhook delivery which caused 2 concurrent builds racing on the manifest git push.
+
+Removed the `triggers { githubPush() }` block and added `options { disableConcurrentBuilds() } as a safety net.
+
+`beforeAgent true` + `chanelog` approach backfired. Changelog was empty at evaluation time because it ran before any checkout so `not { changelog }` always evaluated true and every commit including bot commits passed the guard and retriggered another deploy commit forever.
+
+Reverted to original approach `agent { kuberentes {...} }` at pipeline level with "Skip if bot commit" stage doing `git log -1 --pretty=%B` after checkout and calling `error()` if it starts with `deploy:`.
+
+Kept `disableConcurrentBuilds()` and accepted the cost of 1 pod spin up per bot commit as tradeoff.
+
+Pushed a commit on build 27 of the new job which then triggered build 28 which then erroed out with `Error: bot commit, skipping > Finished:Failure` no further build triggered.
+
+Added `when { changeset "Homelabing/Ingress-page/**" }` so only pushes related to the website are triggering jenkins job and not every push.
+
+So now the pipeline was doing what i wanted it to do.

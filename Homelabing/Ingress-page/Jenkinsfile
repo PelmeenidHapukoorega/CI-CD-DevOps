@@ -42,6 +42,16 @@ spec:
   }
 
   stages {
+    stage('Skip if bot commit') {
+      steps {
+        script {
+          def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+          if (msg.startsWith("deploy:")) {
+            error("bot commit, skipping")
+          }
+        }
+      }
+    }
     stage('Build and push image') {
       steps {
         container('kaniko') {

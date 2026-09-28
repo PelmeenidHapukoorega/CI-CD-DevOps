@@ -2,7 +2,6 @@
   var GITHUB_USERNAME = 'PelmeenidHapukoorega';
   var GITHUB_REPO = 'PelmeenidHapukoorega/CI-CD-DevOps';
 
-  // virtual filesystem 
   var FS = {
     '/': ['about.txt', 'certs.txt', 'links.txt', 'stats.txt', 'projects/', 'activity.txt'],
     '/projects/': ['ingress-page.txt', 'k3s-homelab.txt', 'logistikaou.txt', 'azure-labs.txt']
@@ -11,8 +10,8 @@
     '/about.txt': 'Self taught Engineer, Tallinn, Estonia.\nPivoting from six years in technical sales into Azure/DevOps.\nBuilding real infrastructure instead of just studying for exams.',
     '/certs.txt': 'AZ-900   Microsoft Azure Fundamentals\nAZ-104   Microsoft Azure Administrator\nSC-200   Security Operations Analyst course (BCS Koolitus)',
     '/links.txt': 'github     <a class="real-link" href="https://github.com/PelmeenidHapukoorega" target="_blank" rel="noopener">github.com/PelmeenidHapukoorega</a>\nlinkedin   <a class="real-link" href="https://www.linkedin.com/in/notherenotthere/?isSelfProfile=true" target="_blank" rel="noopener">linkedin.com/in/notherenotthere</a>',
-    '/stats.txt': 'loading...', // replaced once fetchLiveStats() resolves
-    '/activity.txt': 'loading...', // replaced once fetchLatestActivity() resolves
+    '/stats.txt': 'loading...',
+    '/activity.txt': 'loading...',
     '/projects/ingress-page.txt': 'This site. Traefik ingress, cert-manager local CA, ArgoCD GitOps,\nJenkins + Kaniko pipeline, Cloudflare tunnel around CGNAT.\n\nfull writeup: <a class="real-link" href="https://github.com/PelmeenidHapukoorega/CI-CD-DevOps/blob/main/Homelabing/Ingress-page/README.md" target="_blank" rel="noopener">Homelabing/Ingress-page/README.md</a>',
     '/projects/k3s-homelab.txt': 'Single-node K3s cluster on a headless Ubuntu laptop. Migrated\nnode_exporter, cAdvisor, Gitea, Prometheus, Grafana off Docker.\n\nfull writeup: <a class="real-link" href="https://github.com/PelmeenidHapukoorega/CI-CD-DevOps/blob/main/k3s/setup/README.md" target="_blank" rel="noopener">k3s/setup/README.md</a>',
     '/projects/logistikaou.txt': 'Scenario-based Azure migration for a fictional logistics company.\nFull Terraform: VNet, MySQL Flexible Server, Key Vault, CI/CD via\nOIDC-federated GitHub Actions, Azure Policy, monitoring alerts.\n\nfull writeup: <a class="real-link" href="https://github.com/PelmeenidHapukoorega/Azure-Lab-Automation/blob/main/ScenarioBased/LogistikaO%C3%9C/README.md" target="_blank" rel="noopener">ScenarioBased/LogistikaOÜ/README.md</a>',
@@ -168,49 +167,45 @@
       });
   }
 
-  // latest activity: GitHub API fetch 
   var latestEl = document.getElementById('latest-commit');
 
-function fetchLatestActivity() {
-  fetch('https://api.github.com/users/' + GITHUB_USERNAME + '/events/public?per_page=8')
-    .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
-    .then(function (events) {
-      var pushEvents = events.filter(function (e) { return e.type === 'PushEvent'; }).slice(0, 6);
-      if (pushEvents.length === 0) {
-        latestEl.textContent = 'no recent public activity';
-        FILES['/activity.txt'] = 'no recent public activity';
-        return;
-      }
+  function fetchLatestActivity() {
+    fetch('https://api.github.com/users/' + GITHUB_USERNAME + '/events/public?per_page=8')
+      .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+      .then(function (events) {
+        var pushEvents = events.filter(function (e) { return e.type === 'PushEvent'; }).slice(0, 6);
+        if (pushEvents.length === 0) {
+          latestEl.textContent = 'no recent public activity';
+          FILES['/activity.txt'] = 'no recent public activity';
+          return;
+        }
 
-      // GitHub's events API drops the commits array during rapid pushes
-      // (its own payload-size throttling), so fetch the real commit message
-      // directly instead of trusting payload.commits.
-      var first = pushEvents[0];
-      var firstRepo = first.repo.name;
-      var firstSha = first.payload.head;
+        var first = pushEvents[0];
+        var firstRepo = first.repo.name;
+        var firstSha = first.payload.head;
 
-      fetch('https://api.github.com/repos/' + firstRepo + '/commits/' + firstSha)
-        .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
-        .then(function (commit) {
-          latestEl.textContent = commit.commit.message.split('\n')[0];
-        })
-        .catch(function () {
-          latestEl.textContent = firstRepo.split('/')[1] + '@' + firstSha.slice(0, 7);
+        fetch('https://api.github.com/repos/' + firstRepo + '/commits/' + firstSha)
+          .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+          .then(function (commit) {
+            latestEl.textContent = commit.commit.message.split('\n')[0];
+          })
+          .catch(function () {
+            latestEl.textContent = firstRepo.split('/')[1] + '@' + firstSha.slice(0, 7);
+          });
+
+        var lines = pushEvents.map(function (e) {
+          var repo = e.repo.name.split('/')[1] || e.repo.name;
+          var sha = e.payload.head ? e.payload.head.slice(0, 7) : '???????';
+          return repo + '   ' + sha;
         });
-
-      var lines = pushEvents.map(function (e) {
-        var repo = e.repo.name.split('/')[1] || e.repo.name;
-        var sha = e.payload.head ? e.payload.head.slice(0, 7) : '???????';
-        return repo + '   ' + sha;
+        FILES['/activity.txt'] = lines.join('\n');
+      })
+      .catch(function () {
+        latestEl.textContent = 'couldn\'t load activity';
+        FILES['/activity.txt'] = 'couldn\'t reach the GitHub API just now.';
       });
-      FILES['/activity.txt'] = lines.join('\n');
-    })
-    .catch(function () {
-      latestEl.textContent = 'couldn\'t load activity';
-      FILES['/activity.txt'] = 'couldn\'t reach the GitHub API just now.';
-    });
-}
-  // boot sequence: show identity immediately so the page isnt an empty prompt
+  }
+
   execute('whoami');
   print('Self taught Engineer, Tallinn, Estonia. Type <span class="clickable" role="button" tabindex="0" onclick="runCmd(\'help\')">help</span> to look around.');
   input.focus();

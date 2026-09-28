@@ -27,3 +27,11 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
+          volumeMounts:
+            - name: deploy-history
+              mountPath: /usr/share/nginx/html/deploy-history.json
+              subPath: data.json
+      volumes:
+        - name: deploy-history
+          configMap:
+            name: deploy-history

@@ -175,22 +175,33 @@ function fetchLatestActivity() {
   fetch('https://api.github.com/users/' + GITHUB_USERNAME + '/events/public?per_page=8')
     .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
     .then(function (events) {
-      var pushEvents = events.filter(function (e) {
-        return e.type === 'PushEvent' && e.payload.commits && e.payload.commits.length > 0;
-      }).slice(0, 6);
+      var pushEvents = events.filter(function (e) { return e.type === 'PushEvent'; }).slice(0, 6);
       if (pushEvents.length === 0) {
         latestEl.textContent = 'no recent public activity';
         FILES['/activity.txt'] = 'no recent public activity';
         return;
       }
+
+      // GitHub's events API drops the commits array during rapid pushes
+      // (its own payload-size throttling), so fetch the real commit message
+      // directly instead of trusting payload.commits.
       var first = pushEvents[0];
-      var firstMsg = first.payload.commits[0].message.split('\n')[0];
-      latestEl.textContent = firstMsg;
+      var firstRepo = first.repo.name;
+      var firstSha = first.payload.head;
+
+      fetch('https://api.github.com/repos/' + firstRepo + '/commits/' + firstSha)
+        .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+        .then(function (commit) {
+          latestEl.textContent = commit.commit.message.split('\n')[0];
+        })
+        .catch(function () {
+          latestEl.textContent = firstRepo.split('/')[1] + '@' + firstSha.slice(0, 7);
+        });
 
       var lines = pushEvents.map(function (e) {
         var repo = e.repo.name.split('/')[1] || e.repo.name;
-        var msg = e.payload.commits[0].message.split('\n')[0];
-        return repo + '   ' + msg;
+        var sha = e.payload.head ? e.payload.head.slice(0, 7) : '???????';
+        return repo + '   ' + sha;
       });
       FILES['/activity.txt'] = lines.join('\n');
     })

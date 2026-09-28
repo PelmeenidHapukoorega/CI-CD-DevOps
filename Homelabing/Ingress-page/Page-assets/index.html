@@ -9,13 +9,9 @@
 <body>
 
 <section class="hero">
-  <div class="campfire-wrap">
-    <div class="campfire-glow"></div>
-    <img src="campfire.gif" alt="" class="campfire-gif">
-  </div>
   <div class="hero-inner">
     <div class="hero-kicker">HOMELAB / PORTFOLIO</div>
-    <h1 class="hero-name">virtualHermit</h1>
+    <h1 class="hero-name">Sander Mooses</h1>
     <p class="hero-role">Self-taught cloud engineer building real infrastructure — Azure, Kubernetes, and a homelab running on a 5G antenna.</p>
     <div class="hero-certs">
       <span class="cert-chip">AZ-900</span>
@@ -29,40 +25,41 @@
 </section>
 
 <main>
-  <section class="section">
-    <h2 class="section-title">Live Stats</h2>
-    <div class="stats-grid">
-      <div class="stat-tile">
-        <div class="stat-label">Deploy Status</div>
-        <div class="stat-value" id="stat-status">loading...</div>
-      </div>
-      <div class="stat-tile">
-        <div class="stat-label">Services</div>
-        <div class="stat-value" id="stat-services">—</div>
-      </div>
-      <div class="stat-tile">
-        <div class="stat-label">Uptime</div>
-        <div class="stat-value" id="stat-uptime">—</div>
-      </div>
-      <div class="stat-tile">
-        <div class="stat-label">Blocked</div>
-        <div class="stat-value" id="stat-blocked">—</div>
-      </div>
+  <div class="page-grid">
+    <div class="content-col">
+      <section class="section">
+        <h2 class="section-title">Recent Activity</h2>
+        <div class="activity-list" id="activity-list">
+          <div class="loading-text">Loading...</div>
+        </div>
+      </section>
     </div>
-    <p class="stats-note">Pulled live from the cluster.</p>
-  </section>
 
-  <section class="section">
-    <h2 class="section-title">Build Log</h2>
-    <div class="timeline" id="timeline-list"></div>
-  </section>
-
-  <section class="section">
-    <h2 class="section-title">Recent Activity</h2>
-    <div class="activity-list" id="activity-list">
-      <div class="loading-text">Loading...</div>
-    </div>
-  </section>
+    <aside class="stats-col">
+      <section class="section">
+        <h2 class="section-title">Live Stats</h2>
+        <div class="stats-grid stats-grid-vertical">
+          <div class="stat-tile">
+            <div class="stat-label">Deploy Status</div>
+            <div class="stat-value" id="stat-status">loading...</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Services</div>
+            <div class="stat-value" id="stat-services">—</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Uptime</div>
+            <div class="stat-value" id="stat-uptime">—</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Blocked</div>
+            <div class="stat-value" id="stat-blocked">—</div>
+          </div>
+        </div>
+        <p class="stats-note">Pulled live from the cluster.</p>
+      </section>
+    </aside>
+  </div>
 </main>
 
 <footer class="site-footer">

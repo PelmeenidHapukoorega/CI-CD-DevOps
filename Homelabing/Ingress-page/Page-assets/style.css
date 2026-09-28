@@ -1,3 +1,25 @@
+main { max-width: 960px; }
+
+.page-grid {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.stats-col { position: sticky; top: 2rem; }
+
+.stats-grid-vertical { grid-template-columns: 1fr; }
+
+.timeline-minimal .timeline-item { padding-bottom: 1.1rem; }
+.timeline-minimal .timeline-title { font-size: 0.92rem; }
+.timeline-minimal .timeline-desc { font-size: 0.82rem; }
+
+@media (max-width: 760px) {
+  .page-grid { grid-template-columns: 1fr; }
+  .stats-col { position: static; }
+}
+
 :root {
   --bg: #17111F;
   --surface: #1F1729;

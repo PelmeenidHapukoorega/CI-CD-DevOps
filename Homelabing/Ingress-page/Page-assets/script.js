@@ -1,24 +1,6 @@
 const GITHUB_USERNAME = "PelmeenidHapukoorega";
 const STATS_API_URL = null;
 
-const timelineData = [
-  { date: "AUG 2026", title: "Jenkins left running, RAM exhaustion", desc: "An unattended Jenkins container pegged a full CPU core for four days, driving system load to ~95. Fixed by stopping it — which prompted the K3s migration below." },
-  { date: "SEP 2026", title: "Migrated core services to K3s", desc: "node_exporter, cAdvisor, pihole-exporter, Gitea, Prometheus, and Grafana moved into K3s with explicit CPU/memory limits." },
-  { date: "SEP 2026", title: "Ingress, TLS, and a self-signed CA", desc: "cert-manager, a local Certificate Authority, and Traefik Ingress with trusted HTTPS for every internal service." },
-  { date: "SEP 2026", title: "ArgoCD for GitOps", desc: "ArgoCD watches GitHub directly and auto-deploys manifest changes instead of manual kubectl apply." },
-  { date: "SEP 2026", title: "Tailscale + Homarr", desc: "Subnet router and split DNS for remote access anywhere, plus a personal Homarr launcher." },
-  { date: "SEP 2026", title: "hermitden.dev goes live", desc: "Registered the domain, connected Cloudflare, and stood up an outbound tunnel from K3s around CGNAT." }
-];
-
-function renderTimeline() {
-  document.getElementById("timeline-list").innerHTML = timelineData.map(item => `
-    <div class="timeline-item">
-      <div class="timeline-date">${item.date}</div>
-      <div class="timeline-title">${item.title}</div>
-      <div class="timeline-desc">${item.desc}</div>
-    </div>`).join("");
-}
-
 async function renderGithubActivity() {
   const container = document.getElementById("activity-list");
   try {
@@ -68,6 +50,5 @@ function renderStats() {
   document.getElementById("stat-blocked").textContent = "—";
 }
 
-renderTimeline();
 renderGithubActivity();
 renderStats();

@@ -32,6 +32,10 @@ spec:
     }
   }
 
+  options {
+    disableConcurrentBuilds()
+  }
+
   triggers {
     githubPush()
   }
@@ -47,7 +51,7 @@ spec:
         script {
           def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
           if (msg.startsWith("deploy:")) {
-            error("bot commit, skipping")
+            error("bot commit,")
           }
         }
       }

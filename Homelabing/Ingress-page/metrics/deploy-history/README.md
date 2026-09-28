@@ -1,3 +1,19 @@
+<a id="toc"></a>
+## Table of Contents
+
+- [Overview](#overview)
+- [ConfigMap, RBAC and Fetch Script](#configmap-rbac-fetch-script)
+- [Docker Image and Jenkins Pipeline Setup](#docker-image-jenkins-pipeline-setup)
+- [RBAC Verification and ArgoCD Application](#rbac-verification-argocd-application)
+- [Jenkins Webhook Trigger Investigation](#jenkins-webhook-trigger-investigation)
+- [Registry and Image Pull Issues](#registry-image-pull-issues)
+- [Multibranch Pipeline and Webhook Loop Fix](#multibranch-pipeline-webhook-loop-fix)
+
+---
+
+<a id="overview"></a>
+## Overview
+
 Moved onto adding metrics to my website starting with adding deployment history.
 
 Idea is to run the CronJob inside the cluster that then reads ArgoCDs `application` object via `kubectl` since ArgoCDs API isnt reachable from outside my network. I.e public page never queries cluster live.
@@ -5,6 +21,13 @@ Idea is to run the CronJob inside the cluster that then reads ArgoCDs `applicati
 Auth through scoped ServiceAccount + Role not an ArgoCD token for fewer secrets.
 
 Output written to ConfigMap mounted into the side pod, served as static JSON file by nginx. Browser fetches the file and never touches ArgoCD.
+
+[Back to top](#toc)
+
+---
+
+<a id="configmap-rbac-fetch-script"></a>
+## ConfigMap, RBAC and Fetch Script
 
 Created an empty ConfigMap so Roles `update` and `patch` paths is what the cronjob would actually use going forward:
 
@@ -28,6 +51,13 @@ Script is idempotent so safe to run every hour regardless of configmaps existanc
 
 >!Note: Configmap got bootstrapped manually once because RBAC role only grants `update`/`patch` and not `create`. `resourceNames` scoping means service account cant create resource in the first place, only touch it once it exists.
 
+[Back to top](#toc)
+
+---
+
+<a id="docker-image-jenkins-pipeline-setup"></a>
+## Docker Image and Jenkins Pipeline Setup
+
 Created dockerfile using same pattern as the pages own dockerfile, small base image and installing only whats needed then copy the app code in. Builds through Kaniko exactly the same way.
 
 Just needed jenkins path restriction to now also watch `metrics/deploy-history/**` so it would know to build it into its own image tag seperate from the site image.
@@ -37,6 +67,13 @@ Then added cronjob with `backoffLimit: 2` so it wouldnt loop on failure hence th
 Used giteas registry again since the sites image is already using one.
 
 Then added new stage to existing jenkinsfile and added path restriction to only build the image if dockerfile or the script is being touched.
+
+[Back to top](#toc)
+
+---
+
+<a id="rbac-verification-argocd-application"></a>
+## RBAC Verification and ArgoCD Application
 
 Applied the RBAC manifest, then checked if service account was created using the correct set namespace:
 
@@ -61,6 +98,13 @@ Then created ArgoCDs application file to watch cronjob.yaml file and created the
 Applied the application manifest and checked if application was synced and healthy:
 
 ![Deploy synced fully](./screenshots/deploy-synced-healthy.PNG)
+
+[Back to top](#toc)
+
+---
+
+<a id="jenkins-webhook-trigger-investigation"></a>
+## Jenkins Webhook Trigger Investigation
 
 Pushed a test change on jenkins, application didnt however trigger the jenkins build so started investigatinga as to why it wasnt triggering.
 
@@ -114,6 +158,13 @@ Potential fix i will need to test: Convert the website to multibranch pipeline j
 
 Fallback confirmed not viable at all, poll scm would hit the exact same poll() method so it wouldnt have worked either. For now manual Build now going forward until i set up the multibranch.
 
+[Back to top](#toc)
+
+---
+
+<a id="registry-image-pull-issues"></a>
+## Registry and Image Pull Issues
+
 Picked this up again today, saw that traefik logs showed 404 on /v2/virtualhermit/deploy-history-fetch/manifests/latest, cronjob pods stuck in ImagePullBackOff.
 
 Checked registry directly with curl against giteas v2 API, anon request gave unauthorized (expected, not useful)
@@ -148,6 +199,13 @@ Cron will now run on its own every hour.
 
 Still open: Webhook auto-trigger issue from last night unresolved, ill try setting up multibranch pipeline to see if that would fix the issue.
 
+[Back to top](#toc)
+
+---
+
+<a id="multibranch-pipeline-webhook-loop-fix"></a>
+## Multibranch Pipeline and Webhook Loop Fix
+
 Set up new multibranch pipeline job on jenkins and ran the build.
 
 Jenkins couldnt post build status back to github commits `github-write-creds` PAT was missing scope.
@@ -173,3 +231,5 @@ Pushed a commit on build 27 of the new job which then triggered build 28 which t
 Added `when { changeset "Homelabing/Ingress-page/**" }` so only pushes related to the website are triggering jenkins job and not every push.
 
 So now the pipeline was doing what i wanted it to do. Mounted the configmap into nginx, pushed the changes, site now shows live synced/health status of the pipeline from argocds `application` object.
+
+[Back to top](#toc)

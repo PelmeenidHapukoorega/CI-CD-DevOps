@@ -55,6 +55,9 @@ spec:
       }
     }
     stage('Build and push image') {
+      when {
+        changeset "Homelabing/Ingress-page/**"
+      }
       steps {
         container('kaniko') {
           sh """
@@ -87,6 +90,9 @@ spec:
       }
     }
     stage('Update manifest') {
+      when {
+        changeset "Homelabing/Ingress-page/**"
+      }
       steps {
         sh """
           sed -i -E 's|^([[:space:]]*)image: .*|\\1image: ${IMAGE}:${GIT_COMMIT.take(7)}|' ${MANIFEST_PATH}
@@ -94,6 +100,9 @@ spec:
       }
     }
     stage('Commit manifest change') {
+      when {
+        changeset "Homelabing/Ingress-page/**"
+      }
       steps {
         withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
           sh '''

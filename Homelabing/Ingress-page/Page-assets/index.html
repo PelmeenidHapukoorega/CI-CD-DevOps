@@ -4,67 +4,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>hermitden.dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-kicker">HOMELAB / PORTFOLIO</div>
-    <h1 class="hero-name">Sander Mooses</h1>
-    <p class="hero-role">Self-taught cloud engineer building real infrastructure — Azure, Kubernetes, and a homelab running on a 5G antenna.</p>
-    <div class="hero-certs">
-      <span class="cert-chip">AZ-900</span>
-      <span class="cert-chip">AZ-104</span>
-      <span class="cert-chip">SC-200</span>
-    </div>
-    <div class="hero-links">
-      <a href="https://github.com/PelmeenidHapukoorega" target="_blank" rel="noopener">GitHub</a>
-    </div>
+<header class="topbar">
+  <span class="brand">virtualhermit</span>
+  <nav>
+    <a href="https://github.com/PelmeenidHapukoorega" target="_blank" rel="noopener">Portfolio (GitHub)</a>
+    <a href="https://www.linkedin.com/in/notherenotthere/?isSelfProfile=true" target="_blank" rel="noopener">LinkedIn</a>
+  </nav>
+</header>
+
+<div class="livebar">
+  <div class="group">
+    <span class="group-label">stats:</span>
+    <span class="chip"><span class="pulse-dot" id="stat-dot"></span><span class="k">deploy</span> <span id="stat-deploy">loading...</span></span>
   </div>
-</section>
-
-<main>
-  <div class="page-grid">
-    <div class="content-col">
-      <section class="section">
-        <h2 class="section-title">Recent Activity</h2>
-        <div class="activity-list" id="activity-list">
-          <div class="loading-text">Loading...</div>
-        </div>
-      </section>
-    </div>
-
-    <aside class="stats-col">
-      <section class="section">
-        <h2 class="section-title">Live Stats</h2>
-        <div class="stats-grid stats-grid-vertical">
-          <div class="stat-tile">
-            <div class="stat-label">Deploy Status</div>
-            <div class="stat-value" id="stat-status">loading...</div>
-          </div>
-          <div class="stat-tile">
-            <div class="stat-label">Services</div>
-            <div class="stat-value" id="stat-services">—</div>
-          </div>
-          <div class="stat-tile">
-            <div class="stat-label">Uptime</div>
-            <div class="stat-value" id="stat-uptime">—</div>
-          </div>
-          <div class="stat-tile">
-            <div class="stat-label">Blocked</div>
-            <div class="stat-value" id="stat-blocked">—</div>
-          </div>
-        </div>
-        <p class="stats-note">Pulled live from the cluster.</p>
-      </section>
-    </aside>
+  <div class="group">
+    <span class="group-label">latest:</span>
+    <span class="chip" id="latest-commit">loading...</span>
   </div>
-</main>
+</div>
 
-<footer class="site-footer">
-  hermitden.dev &middot; built and broken in public
+<div class="term">
+  <p class="hint">type <b>help</b> to see what you can do &mdash; or just click anything underlined</p>
+  <div id="log"></div>
+  <div class="prompt-row">
+    <span class="prompt-user">virtualhermit</span><span>:</span><span class="prompt-path" id="cwd-label">~</span><span>$</span>
+    <input id="cmd-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal command input">
+  </div>
+</div>
+
+<footer class="statusbar">
+  <span>hermitden.dev &middot; portfolio shell v1</span>
+  <span>Ubuntu 24.04 LTS &middot; k3s</span>
 </footer>
+
+<div class="modal-backdrop" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">access granted</div>
+    <p>You actually dug around instead of skimming a resume PDF for six seconds &mdash; that already puts you ahead of most. I'm a self-taught cloud engineer (AZ-104, AZ-900) building real Azure/Kubernetes infrastructure, currently looking for my first role in the field.</p>
+    <div class="modal-actions">
+      <a href="mailto:moosessander@gmail.com?subject=Hi%20from%20hermitden.dev">email me</a>
+      <a href="https://www.linkedin.com/in/notherenotthere/?isSelfProfile=true" target="_blank" rel="noopener">linkedin</a>
+      <button type="button" id="modal-close">close</button>
+    </div>
+  </div>
+</div>
 
 <script src="script.js"></script>
 </body>

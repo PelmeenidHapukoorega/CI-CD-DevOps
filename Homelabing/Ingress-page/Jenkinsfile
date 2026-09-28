@@ -56,7 +56,7 @@ spec:
     }
     stage('Build and push image') {
       when {
-        changeset "Homelabing/Ingress-page/**"
+        changeset "Homelabing/Ingress-page/Page-assets/**"
       }
       steps {
         container('kaniko') {
@@ -91,7 +91,7 @@ spec:
     }
     stage('Update manifest') {
       when {
-        changeset "Homelabing/Ingress-page/**"
+        changeset "Homelabing/Ingress-page/Page-assets/**"
       }
       steps {
         sh """
@@ -101,7 +101,7 @@ spec:
     }
     stage('Commit manifest change') {
       when {
-        changeset "Homelabing/Ingress-page/**"
+        changeset "Homelabing/Ingress-page/Page-assets/**"
       }
       steps {
         withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {

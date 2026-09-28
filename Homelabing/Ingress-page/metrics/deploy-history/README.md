@@ -172,4 +172,4 @@ Pushed a commit on build 27 of the new job which then triggered build 28 which t
 
 Added `when { changeset "Homelabing/Ingress-page/**" }` so only pushes related to the website are triggering jenkins job and not every push.
 
-So now the pipeline was doing what i wanted it to do.
+So now the pipeline was doing what i wanted it to do. Mounted the configmap into nginx, pushed the changes, site now shows live synced/health status of the pipeline from argocds `application` object.

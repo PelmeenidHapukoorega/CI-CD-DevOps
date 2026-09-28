@@ -1,24 +1,7 @@
 pipeline {
-  agent none
-
-  options {
-    disableConcurrentBuilds()
-  }
-
-  environment {
-    IMAGE = "gitea.hermitden/virtualhermit/hermitden-site"
-    MANIFEST_PATH = "Homelabing/Ingress-page/manifests/site-deployment.yaml"
-  }
-
-  stages {
-    stage('Build & Deploy') {
-      when {
-        beforeAgent true
-        not { changelog '(?s).*deploy:.*' }
-      }
-      agent {
-        kubernetes {
-          yaml """
+  agent {
+    kubernetes {
+      yaml """
 apiVersion: v1
 kind: Pod
 spec:
@@ -48,60 +31,78 @@ spec:
     configMap:
         name: hermitden-ca
 """
+    }
+  }
+
+  options {
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    IMAGE = "gitea.hermitden/virtualhermit/hermitden-site"
+    MANIFEST_PATH = "Homelabing/Ingress-page/manifests/site-deployment.yaml"
+  }
+
+  stages {
+    stage('Skip if bot commit') {
+      steps {
+        script {
+          def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+          if (msg.startsWith("deploy:")) {
+            error("bot commit, skipping")
+          }
         }
       }
-      stages {
-        stage('Build and push image') {
-          steps {
-            container('kaniko') {
-              sh """
-                /kaniko/executor \
-                  --context=`pwd`/Homelabing/Ingress-page/Page-assets \
-                  --dockerfile=dockerfile \
-                  --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
-                  --destination=${IMAGE}:${GIT_COMMIT.take(7)}
-              """
-            }
-          }
+    }
+    stage('Build and push image') {
+      steps {
+        container('kaniko') {
+          sh """
+            /kaniko/executor \
+              --context=`pwd`/Homelabing/Ingress-page/Page-assets \
+              --dockerfile=dockerfile \
+              --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
+              --destination=${IMAGE}:${GIT_COMMIT.take(7)}
+          """
         }
-        stage('Build and push deploy-history-fetch image') {
-          when {
-            anyOf {
-              changeset "Homelabing/Ingress-page/metrics/deploy-history/dockerfile"
-              changeset "Homelabing/Ingress-page/metrics/deploy-history/fetch.sh"
-            }
-          }
-          steps {
-            container('kaniko') {
-              sh """
-                /kaniko/executor \
-                  --context=`pwd`/Homelabing/Ingress-page/metrics/deploy-history \
-                  --dockerfile=dockerfile \
-                  --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
-                  --destination=gitea.hermitden/virtualhermit/deploy-history-fetch:latest
-              """
-            }
-          }
+      }
+    }
+    stage('Build and push deploy-history-fetch image') {
+      when {
+        anyOf {
+          changeset "Homelabing/Ingress-page/metrics/deploy-history/dockerfile"
+          changeset "Homelabing/Ingress-page/metrics/deploy-history/fetch.sh"
         }
-        stage('Update manifest') {
-          steps {
-            sh """
-              sed -i -E 's|^([[:space:]]*)image: .*|\\1image: ${IMAGE}:${GIT_COMMIT.take(7)}|' ${MANIFEST_PATH}
-            """
-          }
+      }
+      steps {
+        container('kaniko') {
+          sh """
+            /kaniko/executor \
+              --context=`pwd`/Homelabing/Ingress-page/metrics/deploy-history \
+              --dockerfile=dockerfile \
+              --registry-certificate=gitea.hermitden=/kaniko/ssl/certs/hermitden-ca.crt \
+              --destination=gitea.hermitden/virtualhermit/deploy-history-fetch:latest
+          """
         }
-        stage('Commit manifest change') {
-          steps {
-            withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-              sh '''
-                git config user.email "jenkins@hermitden.dev"
-                git config user.name "jenkins"
-                git add ''' + MANIFEST_PATH + '''
-                git commit -m "deploy: hermitden-site ''' + GIT_COMMIT.take(7) + '''"
-                git push https://$GIT_USER:$GIT_PASS@github.com/PelmeenidHapukoorega/CI-CD-DevOps.git HEAD:main
-              '''
-            }
-          }
+      }
+    }
+    stage('Update manifest') {
+      steps {
+        sh """
+          sed -i -E 's|^([[:space:]]*)image: .*|\\1image: ${IMAGE}:${GIT_COMMIT.take(7)}|' ${MANIFEST_PATH}
+        """
+      }
+    }
+    stage('Commit manifest change') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'github-write-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+          sh '''
+            git config user.email "jenkins@hermitden.dev"
+            git config user.name "jenkins"
+            git add ''' + MANIFEST_PATH + '''
+            git commit -m "deploy: hermitden-site ''' + GIT_COMMIT.take(7) + '''"
+            git push https://$GIT_USER:$GIT_PASS@github.com/PelmeenidHapukoorega/CI-CD-DevOps.git HEAD:main
+          '''
         }
       }
     }

@@ -73,7 +73,7 @@ header.topbar {
 @media (prefers-reduced-motion: reduce) { .livebar .pulse-dot { animation: none; } }
 
 /* ---- terminal ---- */
-.term { flex: 1 0 auto; max-width: 880px; width: 100%; margin: 0 auto; padding: 1.75rem 1.25rem 2rem; }
+.term { flex: 1 0 auto; max-width: 880px; width: 100%; margin: 0; padding: 1.75rem 1.25rem 2rem; }
 .hint { color: var(--dim); font-size: 0.8rem; margin-bottom: 1.25rem; }
 .hint b { color: var(--yellow); }
 #log { margin-bottom: 0.25rem; }

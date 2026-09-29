@@ -127,7 +127,7 @@ spec:
           curl -s -X POST "https://api.cloudflare.com/client/v4/zones/8b670d16fa65f2f753d34118cf1fcc87/purge_cache" \
             -H "Authorization: Bearer $CF_TOKEN" \
             -H "Content-Type: application/json" \
-            --data '{"files":["https://www.hermitden.dev/style.css","https://www.hermitden.dev/script.js"]}'
+            --data '{"purge_everything":true}'
         '''
       }
     }

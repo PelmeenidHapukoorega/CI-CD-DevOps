@@ -8,7 +8,7 @@
   };
   var FILES = {
     '/about.txt': 'Self taught Engineer, Tallinn, Estonia.\nPivoting from six years in technical sales into Azure/DevOps.\nBuilding real infrastructure instead of just studying for exams.',
-    '/certs.txt': 'AZ-900   Microsoft Azure Fundamentals\nAZ-104   Microsoft Azure Administrator\nSC-200   Security Operations Analyst course (BCS Koolitus)',
+    '/certs.txt': 'AZ-900   Microsoft Azure Fundamentals     <a class="real-link" href="https://learn.microsoft.com/en-us/users/mooses-0191/credentials/a2991f9a619f3b67?ref=https%3A%2F%2Fwww.linkedin.com%2F" target="_blank" rel="noopener">verify</a>\nAZ-104   Microsoft Azure Administrator    <a class="real-link" href="https://learn.microsoft.com/et-ee/users/mooses-0191/credentials/c24e00119940921c?ref=https%3A%2F%2Fwww.linkedin.com%2F" target="_blank" rel="noopener">verify</a>\nSC-200   Security Operations Analyst course (BCS Koolitus)',
     '/links.txt': 'github     <a class="real-link" href="https://github.com/PelmeenidHapukoorega" target="_blank" rel="noopener">github.com/PelmeenidHapukoorega</a>\nlinkedin   <a class="real-link" href="https://www.linkedin.com/in/notherenotthere/?isSelfProfile=true" target="_blank" rel="noopener">linkedin.com/in/notherenotthere</a>',
     '/stats.txt': 'loading...',
     '/activity.txt': 'loading...',

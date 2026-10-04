@@ -20,7 +20,7 @@ Each tool gets its own folder with:
 | [ArgoCD](./argocd/setup/) | Done | GitOps on K3s |
 | [Ansible](./ansible/setup/) | Done | Config management, extending existing playbook |
 | [Grafana/Prometheus](./prometheus-grafana/setup) | Done | Observability stack — node_exporter + cAdvisor scraped by Prometheus, visualized in Grafana |
-| AI agent layer | Planned | Automation/incident-response experiments |
+| AI agent layer | Planned (Paused) | Automation/incident-response experiments |
 | Azure DevOps Pipelines | Planned | Ported pipeline, AZ-400 focus |
 
 ## Infra
